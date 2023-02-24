@@ -17,3 +17,9 @@ class RoomManager:
 
     def leave_room(self, request):
         pass
+
+    def get_room_state(self, request):
+        pass
+
+    def post_move(self, request):
+        pass

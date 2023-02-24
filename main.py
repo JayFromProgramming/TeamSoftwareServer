@@ -73,15 +73,17 @@ class main:
         self.room_manager = RoomManager(self.database)
         self.app.add_routes([
             web.get('/get_cookie', self.get_cookie),
+            web.get('/get_user/{cookie}', self.get_username),
             web.get('/get_rooms', self.room_manager.get_rooms),
             web.get('/room/get_state', self.room_manager.get_room_state),
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),
             web.post('/leave_room', self.room_manager.leave_room),
+            web.post('/room/make_move', self.room_manager.post_move),
         ])
         self.runner = web.AppRunner(self.app)
         self.webserver_address = "localhost"
-        self.webserver_port = 8080
+        self.webserver_port = 47675
         self.init_database()
 
         self.runner = web.AppRunner(self.app)
@@ -107,12 +109,13 @@ class main:
         # Return the cookie to the user
         return web.json_response({"cookie": cookie})
 
-    """
-    Get the rooms that currently exist
-    """
-
-    def get_rooms(self, request):
-        return web.json_response(self.rooms)
+    def get_username(self, request):
+        cookie = request.match_info["cookie"]
+        user = self.database.get("SELECT * FROM users WHERE cookie = ?", (cookie,))
+        if len(user) == 0:
+            return web.json_response({"error": "Invalid cookie"})
+        else:
+            return web.json_response({"name": user[0][2]})
 
 
 if __name__ == '__main__':
