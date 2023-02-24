@@ -9,6 +9,8 @@ import sqlite3
 import threading
 import hashlib
 
+from roommanager import RoomManager
+
 logging.getLogger(__name__)
 
 
@@ -68,11 +70,14 @@ class main:
     def __init__(self):
         self.app = web.Application()
         self.database = ConcurrentDatabase("database.db")
+        self.room_manager = RoomManager(self.database)
         self.app.add_routes([
             web.get('/get_cookie', self.get_cookie),
-            web.get('/get_rooms', self.get_rooms),
+            web.get('/get_rooms', self.room_manager.get_rooms),
+            web.post('/create_room', self.room_manager.create_room),
+            web.post('/join_room', self.room_manager.join_room),
+            web.post('/leave_room', self.room_manager.leave_room),
         ])
-        self.rooms = {}
         self.runner = web.AppRunner(self.app)
         self.webserver_address = "localhost"
         self.webserver_port = 8080
