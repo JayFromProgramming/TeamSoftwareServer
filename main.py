@@ -7,11 +7,11 @@ import asyncio
 from aiohttp import web
 import sqlite3
 import threading
-import hashlib
 
 from roommanager import RoomManager
+from user import User
 
-logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class CustomLock:
@@ -70,12 +70,15 @@ class main:
     def __init__(self):
         self.app = web.Application()
         self.database = ConcurrentDatabase("database.db")
+        self.init_database()
         self.room_manager = RoomManager(self.database)
         self.app.add_routes([
-            web.get('/get_cookie', self.get_cookie),
-            web.get('/get_user/{cookie}', self.get_username),
+            web.get('/create_user/{username}', self.create_user),
+            web.get('/get_user/{user_id}', self.get_username),
+            web.get('/login/{user_hash}', self.login),
             web.get('/get_rooms', self.room_manager.get_rooms),
             web.get('/room/get_state', self.room_manager.get_room_state),
+
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),
             web.post('/leave_room', self.room_manager.leave_room),
@@ -84,7 +87,6 @@ class main:
         self.runner = web.AppRunner(self.app)
         self.webserver_address = "localhost"
         self.webserver_port = 47675
-        self.init_database()
 
         self.runner = web.AppRunner(self.app)
 
@@ -95,27 +97,38 @@ class main:
         logging.error("Webserver stopped")
 
     def init_database(self):
-        self.database.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, cookie TEXT, name TEXT)")
+        self.database.run("CREATE TABLE IF NOT EXISTS users (id INTEGER constraint table_name_pk primary key autoincrement, username TEXT, "
+                          "hash_id TEXT)")
 
     """
     Give the user a cookie to store on their computer to identify them as a user
     """
 
-    def get_cookie(self, request):
-        # Generate a random cookie
-        cookie = hashlib.sha256(str(random.random()).encode()).hexdigest()
-        # Add the cookie to the database
-        self.database.run("INSERT INTO users (cookie, name) VALUES (?, ?)", (cookie, "Anonymous"))
-        # Return the cookie to the user
-        return web.json_response({"cookie": cookie})
+    def create_user(self, request):
+        username = request.match_info.get('username')
+        user = self.room_manager.users.create_user(username)
+        response = web.json_response({"user_id": user.hash_id}, status=200)
+        response.set_cookie("user_id", str(user.hash_id))
+        logging.info(f"Created user {user.username} with id {user.hash_id}")
+        return response
 
     def get_username(self, request):
-        cookie = request.match_info["cookie"]
-        user = self.database.get("SELECT * FROM users WHERE cookie = ?", (cookie,))
-        if len(user) == 0:
-            return web.json_response({"error": "Invalid cookie"})
-        else:
-            return web.json_response({"name": user[0][2]})
+        user_id = request.match_info.get('user_id')
+        user = self.room_manager.users.get_user_by_id(user_id)
+        if user is None:
+            print("User not found")
+            return web.json_response({"error": "User not found"}, status=404)
+        return web.json_response({"username": user.username}, status=200)
+
+    def login(self, request):
+        user_hash = request.match_info.get('user_hash')
+        user = self.room_manager.users.get_user(user_hash)
+        logging.info(f"Logging in user {user.username} with id {user.hash_id}")
+        if user is None:
+            return web.json_response({"error": "User not found"}, status=404)
+        response = web.json_response({"username": user.username}, status=200)
+        response.set_cookie("user_id", str(user.hash_id))
+        return response
 
 
 if __name__ == '__main__':
