@@ -74,6 +74,7 @@ class main:
         self.app.add_routes([
             web.get('/get_cookie', self.get_cookie),
             web.get('/get_rooms', self.room_manager.get_rooms),
+            web.get('/room/get_state', self.room_manager.get_room_state),
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),
             web.post('/leave_room', self.room_manager.leave_room),
