@@ -77,7 +77,9 @@ class main:
             web.get('/get_user/{user_id}', self.get_username),
             web.get('/login/{user_hash}', self.login),
             web.get('/get_rooms', self.room_manager.get_rooms),
-            web.get('/room/get_state', self.room_manager.get_room_state),
+            web.get('/get_games', self.room_manager.get_available_games),
+            web.get('/room/get_state', self.room_manager.get_board_state),
+            web.get('/room/has_changed', self.room_manager.has_room_changed),
 
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),

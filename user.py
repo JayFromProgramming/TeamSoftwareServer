@@ -4,6 +4,7 @@ import logging
 
 logging = logging.getLogger(__name__)
 
+
 class User:
 
     def __init__(self, database, new_user=False, username=None, hash_id=None):
@@ -20,6 +21,9 @@ class User:
         self.hash_id = hash_id
 
         self.current_room = None
+        self.room_updated = False
+
+        self.game_data_slot = None  # A variable that game rooms can use to store data for the user
 
         if new_user:
             self.username = username
@@ -62,6 +66,19 @@ class User:
         :return:
         """
         self.current_room = None
+
+    def __str__(self):
+        return self.user_id
+
+    def encode(self):
+        """
+        Encodes the user object
+        :return:
+        """
+        return {
+            "username": self.username,
+            "user_id": self.user_id
+        }
 
 class Users:
 
@@ -130,5 +147,3 @@ class Users:
             if user.user_id == user_id:
                 return user
         return None
-
-
