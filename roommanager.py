@@ -1,7 +1,6 @@
 from aiohttp import web
 
 from gamemanagers.chess_room import Chess
-from gamemanagers.test_room import TestRoom
 from user import User, Users
 
 import logging
