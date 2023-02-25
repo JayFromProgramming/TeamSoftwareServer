@@ -137,9 +137,8 @@ class RoomManager:
         room = user.current_room
         if room is None:
             return web.json_response({"error": "User not in a room"}, status=400)
-
+        user.ping()
         if user.room_updated:
-            user.ping()
             user.room_updated = False
             return web.json_response({"changed": True}, status=200)
         else:
@@ -201,6 +200,6 @@ class RoomManager:
             for room in self.rooms.values():
                 if room.is_empty():
                     logging.info(f"Deleting room {room.room_id}")
-                    del self.rooms[room.room_id]
+                    self.rooms.pop(room.room_id)
             logging.info("Finished cleaning up rooms")
             time.sleep(30)
