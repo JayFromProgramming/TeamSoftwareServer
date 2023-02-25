@@ -128,7 +128,7 @@ class RoomManager:
         :param request:
         :return:
         """
-        logging.info(f"Room change request: {request}")
+        logging.debug(f"Room change request: {request}")
         if "user_hash" not in request.cookies:
             return web.json_response({"error": "Missing Authentication"}, status=401)
         user = self.users.get_user(request.cookies["user_hash"])
@@ -165,4 +165,27 @@ class RoomManager:
         return web.json_response(room_state, status=200)
 
     async def post_move(self, request):
-        pass
+        logging.info(f"Move request: {request}")
+        if "user_hash" not in request.cookies:
+            return web.json_response({"error": "Missing Authentication"}, status=401)
+        user = self.users.get_user(request.cookies["user_hash"])
+        if user is None:
+            return web.json_response({"error": "Invalid user"}, status=403)
+
+        data = await request.json()
+        move = data["move"] if "move" in data else None
+        if move is None:
+            return web.json_response({"error": "Invalid request"}, status=400)
+
+        room = user.current_room
+        if room is None:
+            return web.json_response({"error": "User not in a room"}, status=402)
+        try:
+            result = room.post_move(user, move)
+            if 'error' in result:
+                return web.json_response(result, status=400)
+            else:
+                return web.json_response(result, status=200)
+        except Exception as e:
+            logging.exception(f"Failed to post move: {e}")
+            return web.json_response({"error": "Failed to post move"}, status=500)
