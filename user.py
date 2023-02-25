@@ -39,6 +39,7 @@ class User:
         logging.info("Creating new user")
         self.hash_id = hashlib.sha256(random.getrandbits(256).to_bytes(32, "big")).hexdigest()
         self.database.run("INSERT INTO users VALUES (NULL, ?, ?)", (self.username, self.hash_id))
+        self.user_id = self.database.get("SELECT last_insert_rowid()")[0][0]
 
     def _load_user(self):
         """

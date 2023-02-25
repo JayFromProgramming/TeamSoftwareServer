@@ -32,9 +32,10 @@ class Chess(BaseRoom):
     def get_board_state(self, user):
         return {
             "your_color": "white" if user == self.users[0] else "black",
-            "current_player": self.current_player,
-            "board": self.board.fen(),
-            "last_move": self.last_move
+            "current_player": "white" if self.current_player == self.users[0] else "black",
+            "board": self.board.board_fen(),
+            "last_move": str(self.last_move),
+            "state": self.state
         }
 
     def check_win_conditions(self):
@@ -53,12 +54,20 @@ class Chess(BaseRoom):
         elif self.board.is_fivefold_repetition():
             self.state = "Fivefold Repetition"
             return True
+        elif self.board.is_check():
+            self.state = "Check"
+            return False
         else:
             return False
 
     def post_move(self, user, move):
-        if user != self.current_player:
-            logging.info(f"User {user.username} tried to move out of turn")
+        # print(user.username, move)
+
+        for player in self.users:
+            player.room_updated = True
+
+        if user.user_id != self.current_player.user_id:
+            logging.info(f"User {user.username} tried to move out of turn, current player is {self.current_player.username}")
             return {"error": "out_of_turn"}
         try:
             self.board.push_uci(move)
@@ -73,6 +82,7 @@ class Chess(BaseRoom):
             return {"error": "unknown_error"}
 
         self.last_move = move
+        self.state = "In Progress"
         if self.check_win_conditions():
             return {"result": self.state}
         if len(self.users) == 2:
@@ -80,5 +90,4 @@ class Chess(BaseRoom):
         else:
             self.current_player = self.users[0]
 
-        for user in self.users:
-            user.room_updated = True
+        return {"result": "success"}
