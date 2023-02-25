@@ -1,3 +1,5 @@
+import time
+
 from aiohttp import web
 
 from gamemanagers.chess_room import Chess
@@ -137,6 +139,7 @@ class RoomManager:
             return web.json_response({"error": "User not in a room"}, status=400)
 
         if user.room_updated:
+            user.ping()
             user.room_updated = False
             return web.json_response({"changed": True}, status=200)
         else:
@@ -187,3 +190,17 @@ class RoomManager:
         except Exception as e:
             logging.exception(f"Failed to post move: {e}")
             return web.json_response({"error": "Failed to post move"}, status=500)
+
+    def cleanup_rooms(self):
+        """
+        Cleans up rooms that have no users
+        :return:
+        """
+        while True:
+            logging.info("Cleaning up rooms")
+            for room in self.rooms.values():
+                if room.is_empty():
+                    logging.info(f"Deleting room {room.room_id}")
+                    del self.rooms[room.room_id]
+            logging.info("Finished cleaning up rooms")
+            time.sleep(30)

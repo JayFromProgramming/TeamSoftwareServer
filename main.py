@@ -90,6 +90,8 @@ class main:
         self.webserver_address = "wopr.eggs.loafclan.org"
         self.webserver_port = 47675
 
+        threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
+
         self.runner = web.AppRunner(self.app)
 
     def run(self):

@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import random
 import logging
@@ -19,6 +20,7 @@ class User:
         self.username = None
         self.user_id = None
         self.hash_id = hash_id
+        self.last_ping = datetime.datetime.fromtimestamp(0)
 
         self.current_room = None
         self.room_updated = False
@@ -52,6 +54,21 @@ class User:
         user = user[0]
         self.username = user[1]
         self.user_id = user[0]
+
+    def ping(self):
+        """
+        Updates the last ping time
+        :return:
+        """
+        self.last_ping = datetime.datetime.now()
+
+    @property
+    def online(self):
+        """
+        Returns whether or not the user is online
+        :return:
+        """
+        return (datetime.datetime.now() - self.last_ping).total_seconds() < 30
 
     def join_room(self, room):
         """

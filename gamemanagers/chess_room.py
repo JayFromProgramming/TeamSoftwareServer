@@ -101,3 +101,13 @@ class Chess(BaseRoom):
             return {"result": self.state}
 
         return {"result": "success"}
+
+    def is_empty(self):
+        """
+        Checks if any users have timed out and removes them from the room
+        :return:
+        """
+        for user in self.users:
+            if not user.online:
+                self.user_leave(user)
+                return True
