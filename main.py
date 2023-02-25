@@ -87,7 +87,7 @@ class main:
             web.post('/room/make_move', self.room_manager.post_move),
         ])
         self.runner = web.AppRunner(self.app)
-        self.webserver_address = "localhost"
+        self.webserver_address = "pi.wopr.loafclan.org"
         self.webserver_port = 47675
 
         self.runner = web.AppRunner(self.app)
