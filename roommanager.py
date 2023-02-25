@@ -15,7 +15,6 @@ class RoomManager:
         self.database = database
         self.rooms = {}
         self.valid_room_types = {
-            TestRoom.__name__: TestRoom,
             Chess.__name__: Chess
         }
         self.users = Users(self.database)

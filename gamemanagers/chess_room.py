@@ -34,7 +34,7 @@ class Chess(BaseRoom):
         return {
             "your_color": chess.WHITE if user == self.users[0] else chess.BLACK if user in self.users else None,
             "current_player": chess.WHITE if self.board.turn == chess.WHITE else chess.BLACK,
-            "board": self.board.board_fen(),
+            "board": self.board.epd(hmvc=self.board.halfmove_clock, fmvn=self.board.fullmove_number),
             "last_move": str(self.last_move),
             "state": self.state,
             # "taken_pieces": self.taken_pieces
@@ -92,11 +92,12 @@ class Chess(BaseRoom):
         #     logging.info(f"User {user.username} took a piece: {piece.symbol()},
         #     self.taken_pieces["white" if piece.color else "black"].append(piece.symbol())
 
-        if self.check_win_conditions():
-            return {"result": self.state}
         if len(self.users) == 2:
             self.current_player = self.users[1] if self.current_player == self.users[0] else self.users[0]
         else:
             self.current_player = self.users[0]
+
+        if self.check_win_conditions():
+            return {"result": self.state}
 
         return {"result": "success"}
