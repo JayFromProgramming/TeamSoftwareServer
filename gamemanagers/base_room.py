@@ -9,7 +9,7 @@ class BaseRoom:
         host.join_room(self)
         self.password = password
         self.users = [self.host]  # type: list[User]
-        self.ai = []  # type: list[AI]
+        self.spectators = []  # type: list[User]
         self.name = name
         self.state = "Idle"
         self.room_id = hashlib.sha256(str(self.name).encode('utf-8')).hexdigest()

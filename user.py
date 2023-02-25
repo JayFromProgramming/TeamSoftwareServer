@@ -60,6 +60,7 @@ class User:
         :return:
         """
         self.current_room = room
+        self.room_updated = True
 
     def leave_room(self):
         """

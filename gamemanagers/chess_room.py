@@ -20,10 +20,11 @@ class Chess(BaseRoom):
         self.current_player = self.users[0]
 
     def user_join(self, user):
-        if len(self.users) >= self.max_users:
-            raise ValueError("Room is full")
         user.join_room(self)
-        self.users.append(user)
+        if len(self.users) >= self.max_users:
+            self.spectators.append(user)
+        else:
+            self.users.append(user)
 
     def user_leave(self, user):
         user.leave_room()
@@ -31,11 +32,12 @@ class Chess(BaseRoom):
 
     def get_board_state(self, user):
         return {
-            "your_color": "white" if user == self.users[0] else "black",
-            "current_player": "white" if self.current_player == self.users[0] else "black",
+            "your_color": chess.WHITE if user == self.users[0] else chess.BLACK if user in self.users else None,
+            "current_player": chess.WHITE if self.board.turn == chess.WHITE else chess.BLACK,
             "board": self.board.board_fen(),
             "last_move": str(self.last_move),
-            "state": self.state
+            "state": self.state,
+            # "taken_pieces": self.taken_pieces
         }
 
     def check_win_conditions(self):
@@ -55,7 +57,7 @@ class Chess(BaseRoom):
             self.state = "Fivefold Repetition"
             return True
         elif self.board.is_check():
-            self.state = "Check"
+            self.state = f"{self.current_player.username} is in check"
             return False
         else:
             return False
@@ -63,7 +65,7 @@ class Chess(BaseRoom):
     def post_move(self, user, move):
         # print(user.username, move)
 
-        for player in self.users:
+        for player in self.users + self.spectators:
             player.room_updated = True
 
         if user.user_id != self.current_player.user_id:
@@ -83,6 +85,13 @@ class Chess(BaseRoom):
 
         self.last_move = move
         self.state = "In Progress"
+
+        # if self.board.is_capture(self.board.peek()):
+        #     captured_piece = self.board.piece_at(self.board.peek().to_square)
+        #
+        #     logging.info(f"User {user.username} took a piece: {piece.symbol()},
+        #     self.taken_pieces["white" if piece.color else "black"].append(piece.symbol())
+
         if self.check_win_conditions():
             return {"result": self.state}
         if len(self.users) == 2:
