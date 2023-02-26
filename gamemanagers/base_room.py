@@ -39,18 +39,6 @@ class BaseRoom:
     def user_leave(self, user):
         raise NotImplementedError
 
-    def ai_add(self):
-        raise NotImplementedError
-
-    def ai_remove(self):
-        raise NotImplementedError
-
-    def ai_move(self):
-        raise NotImplementedError
-
-    def get_users(self):
-        raise NotImplementedError
-
     def frequent_update(self):
         raise NotImplementedError
 
