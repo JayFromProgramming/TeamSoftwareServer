@@ -196,6 +196,36 @@ class RoomManager:
             logging.exception(f"Failed to post move: {e}")
             return web.json_response({"error": "Failed to post move"}, status=500)
 
+    async def save_game(self, request):
+        """
+        Saves a game to the database so it can be loaded later
+        :param request:
+        :return:
+        """
+        if "user_hash" not in request.cookies:
+            return web.json_response({"error": "Missing Authentication"}, status=401)
+        user = self.users.get_user(request.cookies["user_hash"])
+        logging.info(f"Save game request from {user.username}({user.user_id}): {request}")
+        if user is None:
+            return web.json_response({"error": "Invalid user"}, status=403)
+
+        data = await request.json()
+        game = data["game"] if "game" in data else None
+        if game is None:
+            return web.json_response({"error": "Invalid request"}, status=400)
+        room = user.current_room
+        if room is None:
+            return web.json_response({"error": "User not in a room"}, status=402)
+        try:
+            result = room.save_game(user, game)
+            if 'error' in result:
+                return web.json_response(result, status=400)
+            else:
+                return web.json_response(result, status=200)
+        except Exception as e:
+            logging.exception(f"Failed to save game: {e}")
+            return web.json_response({"error": "Failed to save game"}, status=500)
+
     def cleanup_rooms(self):
         """
         Cleans up rooms that have no users

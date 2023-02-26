@@ -10,6 +10,7 @@ class Chess(BaseRoom):
 
     def __init__(self, database, host, name, password=None):
         super().__init__(database, host, name, password)
+        self.database_init()
         self.state = "Idle"
         self.board = chess.Board()
         self.max_users = 2
@@ -18,6 +19,12 @@ class Chess(BaseRoom):
         self.score = 0
         self.last_move = None
         self.current_player = self.users[0]
+
+    def database_init(self):
+        # Create the table to save chess games if it doesn't exist
+        self.database.execute("CREATE TABLE IF NOT EXISTS chess_game_saves ("
+                              "game_id TEXT PRIMARY KEY, board_epd TEXT, white_hash TEXT, black_hash TEXT, "
+                              "current_player TEXT, last_move TEXT, time_elapsed INTEGER, time_remaining INTEGER)")
 
     def user_join(self, user):
         user.join_room(self)
@@ -117,7 +124,11 @@ class Chess(BaseRoom):
         Saves the game to the database to be able to be loaded later
         :return:
         """
-
+        self.database.execute("INSERT INTO chess_game_saves VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                              (self.room_id, self.board.epd(hmvc=self.board.halfmove_clock,
+                                                            fmvn=self.board.fullmove_number),
+                               self.users[0].hash_id, self.users[1].hash_id, self.board.turn,
+                               self.last_move, self.time_elapsed, self.time_remaining))
 
     def is_empty(self):
         """
@@ -127,4 +138,7 @@ class Chess(BaseRoom):
         for user in self.users:
             if not user.online:
                 self.user_leave(user)
-                return True
+
+        for spectator in self.spectators:
+            if not spectator.online:
+                self.user_leave(spectator)
