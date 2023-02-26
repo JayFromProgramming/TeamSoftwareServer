@@ -23,7 +23,7 @@ class RoomManager:
 
     def database_init(self):
         self.database.execute("CREATE TABLE IF NOT EXISTS game_saves ("
-                              "room_id TEXT PRIMARY KEY, room_type TEXT, room_name TEXT, room_name TEXT, room_password TEXT)")
+                              "room_id TEXT PRIMARY KEY, room_type TEXT, room_name TEXT, room_password TEXT)")
 
     async def create_room(self, request):
         """
