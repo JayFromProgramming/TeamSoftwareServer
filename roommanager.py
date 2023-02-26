@@ -203,9 +203,12 @@ class RoomManager:
         """
         while True:
             logging.info("Cleaning up rooms")
+            to_delete = []
             for room in self.rooms.values():
                 if room.is_empty():
                     logging.info(f"Deleting room {room.room_id}")
-                    self.rooms.pop(room.room_id)
+                    to_delete.append(room.room_id)
+            for room_id in to_delete:
+                self.rooms.pop(room_id)
             logging.info("Finished cleaning up rooms")
             time.sleep(30)
