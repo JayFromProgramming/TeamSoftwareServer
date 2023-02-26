@@ -134,7 +134,7 @@ class Chess(BaseRoom):
                                                             fmvn=self.board.fullmove_number),
                                self.users[0].hash_id, self.users[1].hash_id if len(self.users) == 2 else None,
                                self.board.turn, self.last_move, self.time_elapsed, self.time_remaining))
-        self.database.execute("INSERT INTO room_saves VALUES (?, ?, ?)", (self.room_id, "chess", self.name))
+        self.database.execute("INSERT INTO room_saves VALUES (?, ?, ?, ?)", (self.room_id, "chess", self.name, self.password))
         return {"room_id": self.room_id, "room_type": "chess"}
 
     def load_game(self, game_id):
