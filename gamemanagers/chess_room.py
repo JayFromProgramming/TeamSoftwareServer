@@ -132,8 +132,8 @@ class Chess(BaseRoom):
         self.database.execute("INSERT INTO chess_game_saves VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                               (self.room_id, self.board.epd(hmvc=self.board.halfmove_clock,
                                                             fmvn=self.board.fullmove_number),
-                               self.users[0].hash_id, self.users[1].hash_id, self.board.turn,
-                               self.last_move, self.time_elapsed, self.time_remaining))
+                               self.users[0].hash_id, self.users[1].hash_id if len(self.users) == 2 else None,
+                               self.board.turn, self.last_move, self.time_elapsed, self.time_remaining))
         self.database.execute("INSERT INTO room_saves VALUE (?, ?, ?)", (self.room_id, "chess", self.name))
         return {"room_id": self.room_id, "room_type": "chess"}
 
