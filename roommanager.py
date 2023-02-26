@@ -147,9 +147,8 @@ class RoomManager:
         frequent_update = room.frequent_update()
         if user.room_updated:
             user.room_updated = False
-            return web.json_response(frequent_update.update({"changed": True}), status=200)
-        else:
-            return web.json_response(frequent_update.update({"changed": False}), status=200)
+            return web.json_response({"room_changed": True, "frequent_update": frequent_update})
+        return web.json_response({"room_changed": False, "frequent_update": frequent_update})
 
     def get_board_state(self, request):
         """
