@@ -80,6 +80,7 @@ class main:
             web.get('/get_games', self.room_manager.get_available_games),
             web.get('/room/get_state', self.room_manager.get_board_state),
             web.get('/room/has_changed', self.room_manager.has_room_changed),
+            web.get('/room/get_saved_info/{game_id}', self.room_manager.get_save_game_info),
 
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),
@@ -89,7 +90,8 @@ class main:
             web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.runner = web.AppRunner(self.app)
-        self.webserver_address = "wopr.eggs.loafclan.org"
+        # self.webserver_address = "wopr.eggs.loafclan.org"
+        self.webserver_address = "localhost"
         self.webserver_port = 47675
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
@@ -129,9 +131,9 @@ class main:
     def login(self, request):
         user_hash = request.match_info.get('user_hash')
         user = self.room_manager.users.get_user(user_hash)
-        logging.info(f"Logging in user {user.username} with id {user.hash_id}")
         if user is None:
             return web.json_response({"error": "User not found"}, status=404)
+        logging.info(f"Logging in user {user.username} with id {user.hash_id}")
         response = web.json_response({"username": user.username}, status=200)
         response.set_cookie("user_id", str(user.hash_id))
         return response

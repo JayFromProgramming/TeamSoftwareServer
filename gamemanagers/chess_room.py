@@ -1,3 +1,8 @@
+import datetime
+import random
+import threading
+import time
+
 import chess
 
 from gamemanagers.base_room import BaseRoom
@@ -10,29 +15,40 @@ logging = logging.getLogger(__name__)
 
 class Chess(BaseRoom):
 
-    def __init__(self, database, host, name, password=None, from_save=False):
-        super().__init__(database, host, name, password)
+    def __init__(self, database, host=None, name=None, password=None, from_save=False, **kwargs):
+        super().__init__(database, name, host, password)
         self.database_init()
         if from_save:
-            self.load_game(from_save)
+            self.load_game(from_save, **kwargs)
         else:
             self.state = "Idle"
+            # self.board = chess.Board(chess960=True).from_chess960_pos(random.randint(0, 959))
             self.board = chess.Board()
             self.max_users = 2
-            self.time_elapsed = 0
-            self.time_remaining = 0
+
+            self.timers_enabled = True
+            self.move_timers = [datetime.timedelta(minutes=5), datetime.timedelta(minutes=5)]
+            self.time_added_per_move = datetime.timedelta(seconds=10)
+
             self.score = 0
             self.last_move = None
             self.current_player = self.users[0]
+
+        self.game_over = False
+        threading.Thread(target=self.timer_thread, daemon=True).start()
 
     def database_init(self):
         # Create the table to save chess games if it doesn't exist
         self.database.run("CREATE TABLE IF NOT EXISTS chess_game_saves ("
                           "game_id TEXT PRIMARY KEY, board_epd TEXT, white_hash TEXT, black_hash TEXT, "
-                          "current_player TEXT, last_move TEXT, time_elapsed INTEGER, time_remaining INTEGER)")
+                          "current_player TEXT, last_move TEXT, white_time_remaining INTEGER, black_time_remaining INTEGER,"
+                          "time_added_per_move INTEGER, timers_enabled BOOLEAN)")
 
     def user_join(self, user):
+        # Check if the user is already in the room
         user.join_room(self)
+        if user in self.users + self.spectators:
+            return
         if len(self.users) >= self.max_users:
             self.spectators.append(user)
         else:
@@ -49,7 +65,8 @@ class Chess(BaseRoom):
         """
         return {
             "players": [user.encode() for user in self.users],
-            "spectators": [user.encode() for user in self.spectators]
+            "spectators": [user.encode() for user in self.spectators],
+            "move_timers": [timer.total_seconds() for timer in self.move_timers],
         }
 
     def get_board_state(self, user):
@@ -59,6 +76,8 @@ class Chess(BaseRoom):
             "board": self.board.epd(hmvc=self.board.halfmove_clock, fmvn=self.board.fullmove_number),
             "last_move": str(self.last_move),
             "state": self.state,
+            "timers_enabled": self.timers_enabled,
+            "game_over": self.game_over,
             # "taken_pieces": self.taken_pieces
         }
 
@@ -84,6 +103,23 @@ class Chess(BaseRoom):
         else:
             return False
 
+    def timer_thread(self):
+        """
+        This function is called every second and updates the timers if they are enabled
+        :return:
+        """
+        while self.timers_enabled:
+            # Only start the timer after the first move
+            if not self.board.move_stack:
+                time.sleep(1)
+                continue
+            self.move_timers[0] -= datetime.timedelta(seconds=1) if self.board.turn == chess.WHITE else datetime.timedelta()
+            self.move_timers[1] -= datetime.timedelta(seconds=1) if self.board.turn == chess.BLACK else datetime.timedelta()
+
+            if self.move_timers[0] <= datetime.timedelta() or self.move_timers[1] <= datetime.timedelta():
+                self.state = "Time Up"
+            time.sleep(1)
+
     def post_move(self, user, move):
         # print(user.username, move)
 
@@ -108,11 +144,10 @@ class Chess(BaseRoom):
         self.last_move = move
         self.state = "In Progress"
 
-        # if self.board.is_capture(self.board.peek()):
-        #     captured_piece = self.board.piece_at(self.board.peek().to_square)
-        #
-        #     logging.info(f"User {user.username} took a piece: {piece.symbol()},
-        #     self.taken_pieces["white" if piece.color else "black"].append(piece.symbol())
+        # Update the timers
+        if self.timers_enabled:
+            self.move_timers[0] += self.time_added_per_move if self.board.turn == chess.BLACK else datetime.timedelta()
+            self.move_timers[1] += self.time_added_per_move if self.board.turn == chess.WHITE else datetime.timedelta()
 
         if len(self.users) == 2:
             self.current_player = self.users[1] if self.current_player == self.users[0] else self.users[0]
@@ -120,7 +155,8 @@ class Chess(BaseRoom):
             self.current_player = self.users[0]
 
         if self.check_win_conditions():
-            return {"result": self.state}
+            self.game_over = True
+            return {"result": "success"}
 
         return {"result": "success"}
 
@@ -133,38 +169,63 @@ class Chess(BaseRoom):
                           (self.room_id, self.board.epd(hmvc=self.board.halfmove_clock,
                                                         fmvn=self.board.fullmove_number),
                            self.users[0].hash_id, self.users[1].hash_id if len(self.users) == 2 else None,
-                           self.board.turn, self.last_move, self.time_elapsed, self.time_remaining))
-        self.database.run("INSERT INTO room_saves VALUES (?, ?, ?, ?)", (self.room_id, "chess", self.name, self.password))
+                           self.board.turn, self.last_move, self.time_remaining[0], self.time_remaining[1],
+                           self.time_added_per_move, self.timers_enabled))
+        self.database.run("INSERT INTO room_saves VALUES (?, ?, ?, ?)", (self.room_id, self.__class__.__name__, self.name, self.password))
         return {"room_id": self.room_id, "room_type": "chess"}
 
-    def load_game(self, game_id):
+    @classmethod
+    def get_save_game_info(cls, database, users, room_id):
         """
-        Loads a game from the database
-        :param game_id:
-        :return:
+        Gets the info of a saved game
+        :param database: The database to get the info from
+        :param users: The users in the room
+        :param room_id: The id of the room
+        :return: A dictionary of the info
         """
-        game = self.database.get("SELECT * FROM chess_game_saves WHERE game_id = ?", (game_id,)).fetchone()
-        if game is None:
+        game = database.get("SELECT * FROM chess_game_saves WHERE game_id = ?", (room_id,))
+        if len(game) == 0:
             raise ValueError("Game not found")
+        game = game[0]
+        user_list = [users.get_user(game[2]).encode()]
+        if game[3] is not None:
+            user_list.append(users.get_user(game[3]).encode())
+        return {
+            "room_id": room_id,
+            "room_type": cls.__name__,
+            "name": database.get("SELECT room_name FROM room_saves WHERE room_id = ?", (room_id,))[0],
+            "password_protected": database.get("SELECT room_password FROM room_saves WHERE room_id = ?", (room_id,))[0],
+            "users": user_list,
+            "max_users": 2,
+            "joinable": True,
+            "current_player": chess.WHITE if game[4] == chess.WHITE else chess.BLACK
+        }
+
+    def load_game(self, game_id, users=None):
+        game = self.database.get("SELECT * FROM chess_game_saves WHERE game_id = ?", (game_id,))
+        if len(game) == 0:
+            raise ValueError("Game not found")
+        game = game[0]
         self.board = chess.Board()
         self.board.turn = game[4]
         self.board.set_epd(game[1])
         self.last_move = game[5]
-        self.time_elapsed = game[6]
-        self.time_remaining = game[7]
+        self.move_timers = [game[6], game[7]]
+        self.time_added_per_move = game[8]
+        self.timers_enabled = True if game[9] == 1 else False
         self.state = "In Progress"
 
-        self.users = [User(self.database, new_user=False, hash_id=game[2]),
-                      User(self.database, new_user=False, hash_id=game[3])]
+        self.users = [users.get_user(game[2])]
+        if game[3] is not None:
+            self.users.append(users.get_user(game[3]))
+
+        self.current_player = self.users[0] if self.board.turn == chess.WHITE else self.users[1]
 
     def is_empty(self):
         """
         Checks if any users have timed out and removes them from the room
         :return:
         """
-        for user in self.users:
-            if not user.online:
-                self.user_leave(user)
 
         for spectator in self.spectators:
             if not spectator.online:

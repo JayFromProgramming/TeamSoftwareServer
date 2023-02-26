@@ -23,7 +23,8 @@ class RoomManager:
 
     def database_init(self):
         self.database.run("CREATE TABLE IF NOT EXISTS room_saves ("
-                              "room_id TEXT PRIMARY KEY, room_type TEXT, room_name TEXT, room_password TEXT)")
+                          "room_id TEXT PRIMARY KEY, room_type TEXT,"
+                          " room_name TEXT, room_password TEXT)")
 
     async def create_room(self, request):
         """
@@ -51,7 +52,7 @@ class RoomManager:
             logging.info(f"Invalid user: {cookie}")
             return web.json_response({"error": "Invalid user"}, status=400)
         try:
-            room = self.valid_room_types[room_type](self.database, user, room_name, room_password)
+            room = self.valid_room_types[room_type](self.database, name=room_name, host=user, password=room_password)
             self.rooms[room.room_id] = room
             logging.info(f"Created room: {room.room_id}")
             return web.json_response({"room_id": room.room_id})
@@ -260,15 +261,45 @@ class RoomManager:
             return web.json_response({"error": "Invalid user"}, status=403)
 
         data = await request.json()
-        game = data["game"] if "game" in data else None
-        if game is None:
+        room_id = data["room_id"] if "room_id" in data else None
+        if room_id is None:
             return web.json_response({"error": "Invalid request"}, status=400)
 
-        result = self.database.execute("SELECT * FROM games WHERE game_id = ?", (game,))
+        result = self.database.get("SELECT * FROM room_saves WHERE room_id = ?", (room_id,))
         if len(result) == 0:
             return web.json_response({"error": "Game not found"}, status=404)
-        game = result[0]
+        result = result[0]
         # Create a game object using the data from the database
+        game = self.valid_room_types[result[1]](self.database, name=result[2], password=result[3], from_save=result[0],
+                                                users=self.users)
+        self.rooms[game.room_id] = game
+        game.user_join(user)
+        return web.json_response({"room_id": game.room_id, "room_type": game.__class__.__name__}, status=200)
+
+    def get_save_game_info(self, request):
+        """
+        Returns information about the user's saved games
+        :param request:
+        :return:
+        """
+        logging.info(f"Get save game info request: {request}")
+        if "user_hash" not in request.cookies:
+            return web.json_response({"error": "Missing Authentication"}, status=401)
+        user = self.users.get_user(request.cookies["user_hash"])
+        logging.info(f"Get save game info request from {user.username}({user.user_id}): {request}")
+        if user is None:
+            return web.json_response({"error": "Invalid user"}, status=403)
+
+        game = request.match_info["game_id"]
+        result = self.database.get("SELECT * FROM room_saves WHERE room_id = ?", (game,))
+        if len(result) == 0:
+            return web.json_response({"error": "Game not found"}, status=406)
+        game = result[0]
+        # Get the information about the game from its own table
+        game_type = game[1]
+        game_class = self.valid_room_types[game_type]
+        game_info = game_class.get_save_game_info(self.database, self.users, game[0])
+        return web.json_response(game_info, status=200)
 
     def cleanup_rooms(self):
         """

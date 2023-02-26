@@ -127,7 +127,10 @@ class Users:
         if hash_id in self.users:
             return self.users[hash_id]
         else:
-            self.users[hash_id] = User(self.database, hash_id=hash_id)
+            try:
+                self.users[hash_id] = User(self.database, hash_id=hash_id)
+            except Exception:
+                return None
             return self.users[hash_id]
 
     def create_user(self, username):
