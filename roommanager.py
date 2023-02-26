@@ -46,7 +46,7 @@ class RoomManager:
             logging.info(f"Invalid user: {cookie}")
             return web.json_response({"error": "Invalid user"}, status=400)
         try:
-            room = self.valid_room_types[room_type](user, room_name, room_password)
+            room = self.valid_room_types[room_type](self.database, user, room_name, room_password)
             self.rooms[room.room_id] = room
             logging.info(f"Created room: {room.room_id}")
             return web.json_response({"room_id": room.room_id})
@@ -89,6 +89,12 @@ class RoomManager:
         if user is None:
             logging.info(f"Invalid user: {user_hash}")
             return web.json_response({"error": "Invalid user"}, status=400)
+        if user.current_room is not None:
+            # Check if the user is already in the room
+            if user.current_room.room_id == room_id:
+                return web.json_response({"room_id": room_id})
+            # If the user is in a different room, leave it
+            user.current_room.user_leave(user)
         try:
             room = self.rooms[room_id]
             if room.password is not None and room.password != room_password:
@@ -138,11 +144,12 @@ class RoomManager:
         if room is None:
             return web.json_response({"error": "User not in a room"}, status=400)
         user.ping()
+        frequent_update = room.frequent_update()
         if user.room_updated:
             user.room_updated = False
-            return web.json_response({"changed": True}, status=200)
+            return web.json_response(frequent_update.update({"changed": True}), status=200)
         else:
-            return web.json_response({"changed": False}, status=200)
+            return web.json_response(frequent_update.update({"changed": False}), status=200)
 
     def get_board_state(self, request):
         """

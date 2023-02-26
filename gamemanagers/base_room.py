@@ -4,7 +4,8 @@ import hashlib
 
 class BaseRoom:
 
-    def __init__(self, host: User, name: str, password: str = None):
+    def __init__(self, database, host: User, name: str, password: str = None):
+        self.database = database
         self.host = host
         host.join_room(self)
         self.password = password
@@ -48,6 +49,9 @@ class BaseRoom:
         raise NotImplementedError
 
     def get_users(self):
+        raise NotImplementedError
+
+    def frequent_update(self):
         raise NotImplementedError
 
     def get_board_state(self, user):

@@ -96,8 +96,10 @@ class User:
         """
         return {
             "username": self.username,
-            "user_id": self.user_id
+            "user_id": self.user_id,
+            "online": self.online,
         }
+
 
 class Users:
 

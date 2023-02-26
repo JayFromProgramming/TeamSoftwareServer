@@ -8,8 +8,8 @@ logging = logging.getLogger(__name__)
 
 class Chess(BaseRoom):
 
-    def __init__(self, host, name, password=None):
-        super().__init__(host, name, password)
+    def __init__(self, database, host, name, password=None):
+        super().__init__(database, host, name, password)
         self.state = "Idle"
         self.board = chess.Board()
         self.max_users = 2
@@ -29,6 +29,16 @@ class Chess(BaseRoom):
     def user_leave(self, user):
         user.leave_room()
         self.users.remove(user)
+
+    def frequent_update(self):
+        """
+        Data that is sent to the client every second
+        :return:
+        """
+        return {
+            "players": [user.encode() for user in self.users],
+            "spectators": [user.encode() for user in self.spectators]
+        }
 
     def get_board_state(self, user):
         return {
@@ -101,6 +111,13 @@ class Chess(BaseRoom):
             return {"result": self.state}
 
         return {"result": "success"}
+
+    def save_game(self):
+        """
+        Saves the game to the database to be able to be loaded later
+        :return:
+        """
+
 
     def is_empty(self):
         """
