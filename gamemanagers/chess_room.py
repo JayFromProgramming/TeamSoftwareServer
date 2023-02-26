@@ -27,9 +27,9 @@ class Chess(BaseRoom):
 
     def database_init(self):
         # Create the table to save chess games if it doesn't exist
-        self.database.execute("CREATE TABLE IF NOT EXISTS chess_game_saves ("
-                              "game_id TEXT PRIMARY KEY, board_epd TEXT, white_hash TEXT, black_hash TEXT, "
-                              "current_player TEXT, last_move TEXT, time_elapsed INTEGER, time_remaining INTEGER)")
+        self.database.run("CREATE TABLE IF NOT EXISTS chess_game_saves ("
+                          "game_id TEXT PRIMARY KEY, board_epd TEXT, white_hash TEXT, black_hash TEXT, "
+                          "current_player TEXT, last_move TEXT, time_elapsed INTEGER, time_remaining INTEGER)")
 
     def user_join(self, user):
         user.join_room(self)
@@ -129,12 +129,12 @@ class Chess(BaseRoom):
         Saves the game to the database to be able to be loaded later
         :return:
         """
-        self.database.execute("INSERT INTO chess_game_saves VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                              (self.room_id, self.board.epd(hmvc=self.board.halfmove_clock,
-                                                            fmvn=self.board.fullmove_number),
-                               self.users[0].hash_id, self.users[1].hash_id if len(self.users) == 2 else None,
-                               self.board.turn, self.last_move, self.time_elapsed, self.time_remaining))
-        self.database.execute("INSERT INTO room_saves VALUES (?, ?, ?, ?)", (self.room_id, "chess", self.name, self.password))
+        self.database.run("INSERT INTO chess_game_saves VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                          (self.room_id, self.board.epd(hmvc=self.board.halfmove_clock,
+                                                        fmvn=self.board.fullmove_number),
+                           self.users[0].hash_id, self.users[1].hash_id if len(self.users) == 2 else None,
+                           self.board.turn, self.last_move, self.time_elapsed, self.time_remaining))
+        self.database.run("INSERT INTO room_saves VALUES (?, ?, ?, ?)", (self.room_id, "chess", self.name, self.password))
         return {"room_id": self.room_id, "room_type": "chess"}
 
     def load_game(self, game_id):
@@ -143,7 +143,7 @@ class Chess(BaseRoom):
         :param game_id:
         :return:
         """
-        game = self.database.execute("SELECT * FROM chess_game_saves WHERE game_id = ?", (game_id,)).fetchone()
+        game = self.database.get("SELECT * FROM chess_game_saves WHERE game_id = ?", (game_id,)).fetchone()
         if game is None:
             raise ValueError("Game not found")
         self.board = chess.Board()
