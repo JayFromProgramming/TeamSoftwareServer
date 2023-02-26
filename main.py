@@ -86,6 +86,7 @@ class main:
             web.post('/leave_room', self.room_manager.leave_room),
             web.post('/room/make_move', self.room_manager.post_move),
             web.post('/room/save_game', self.room_manager.save_game),
+            web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.runner = web.AppRunner(self.app)
         self.webserver_address = "wopr.eggs.loafclan.org"

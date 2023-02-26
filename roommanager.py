@@ -14,11 +14,16 @@ class RoomManager:
 
     def __init__(self, database):
         self.database = database
+        self.database_init()
         self.rooms = {}
         self.valid_room_types = {
             Chess.__name__: Chess
         }
         self.users = Users(self.database)
+
+    def database_init(self):
+        self.database.execute("CREATE TABLE IF NOT EXISTS game_saves ("
+                              "room_id TEXT PRIMARY KEY, room_type TEXT, room_name TEXT, room_name TEXT, room_password TEXT)")
 
     async def create_room(self, request):
         """
@@ -108,7 +113,26 @@ class RoomManager:
             return web.json_response({"error": "Failed to join room"}, status=500)
 
     def leave_room(self, request):
-        pass
+        """
+        Called when a user wants to leave a room
+        :param request:
+        :return:
+        """
+        logging.info(f"Room leave request: {request}")
+        if "user_hash" not in request.cookies:
+            return web.json_response({"error": "Missing Authentication"}, status=401)
+        user = self.users.get_user(request.cookies["user_hash"])
+        if user is None:
+            return web.json_response({"error": "Invalid user"}, status=401)
+        if user.current_room is None:
+            return web.json_response({"error": "User not in a room"}, status=400)
+        try:
+            user.current_room.user_leave(user)
+            logging.info(f"User {user.user_id} left room {user.current_room.room_id}")
+            return web.json_response({"success": True})
+        except Exception as e:
+            logging.exception(f"Failed to leave room: {e}")
+            return web.json_response({"error": "Failed to leave room"}, status=500)
 
     def get_available_games(self, request):
         """
@@ -225,6 +249,30 @@ class RoomManager:
         except Exception as e:
             logging.exception(f"Failed to save game: {e}")
             return web.json_response({"error": "Failed to save game"}, status=500)
+
+    async def load_game(self, request):
+        """
+        Loads a game from the database
+        :param request:
+        :return:
+        """
+        if "user_hash" not in request.cookies:
+            return web.json_response({"error": "Missing Authentication"}, status=401)
+        user = self.users.get_user(request.cookies["user_hash"])
+        logging.info(f"Load game request from {user.username}({user.user_id}): {request}")
+        if user is None:
+            return web.json_response({"error": "Invalid user"}, status=403)
+
+        data = await request.json()
+        game = data["game"] if "game" in data else None
+        if game is None:
+            return web.json_response({"error": "Invalid request"}, status=400)
+
+        result = self.database.execute("SELECT * FROM games WHERE game_id = ?", (game,))
+        if len(result) == 0:
+            return web.json_response({"error": "Game not found"}, status=404)
+        game = result[0]
+        # Create a game object using the data from the database
 
     def cleanup_rooms(self):
         """

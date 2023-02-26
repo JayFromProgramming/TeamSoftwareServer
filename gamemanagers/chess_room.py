@@ -3,22 +3,27 @@ import chess
 from gamemanagers.base_room import BaseRoom
 import logging
 
+from user import User
+
 logging = logging.getLogger(__name__)
 
 
 class Chess(BaseRoom):
 
-    def __init__(self, database, host, name, password=None):
+    def __init__(self, database, host, name, password=None, from_save=False):
         super().__init__(database, host, name, password)
         self.database_init()
-        self.state = "Idle"
-        self.board = chess.Board()
-        self.max_users = 2
-        self.time_elapsed = 0
-        self.time_remaining = 0
-        self.score = 0
-        self.last_move = None
-        self.current_player = self.users[0]
+        if from_save:
+            self.load_game(from_save)
+        else:
+            self.state = "Idle"
+            self.board = chess.Board()
+            self.max_users = 2
+            self.time_elapsed = 0
+            self.time_remaining = 0
+            self.score = 0
+            self.last_move = None
+            self.current_player = self.users[0]
 
     def database_init(self):
         # Create the table to save chess games if it doesn't exist
@@ -129,6 +134,28 @@ class Chess(BaseRoom):
                                                             fmvn=self.board.fullmove_number),
                                self.users[0].hash_id, self.users[1].hash_id, self.board.turn,
                                self.last_move, self.time_elapsed, self.time_remaining))
+        self.database.execute("INSERT INTO room_saves VALUE (?, ?, ?)", (self.room_id, "chess", self.name))
+        return {"room_id": self.room_id, "room_type": "chess"}
+
+    def load_game(self, game_id):
+        """
+        Loads a game from the database
+        :param game_id:
+        :return:
+        """
+        game = self.database.execute("SELECT * FROM chess_game_saves WHERE game_id = ?", (game_id,)).fetchone()
+        if game is None:
+            raise ValueError("Game not found")
+        self.board = chess.Board()
+        self.board.turn = game[4]
+        self.board.set_epd(game[1])
+        self.last_move = game[5]
+        self.time_elapsed = game[6]
+        self.time_remaining = game[7]
+        self.state = "In Progress"
+
+        self.users = [User(self.database, new_user=False, hash_id=game[2]),
+                      User(self.database, new_user=False, hash_id=game[3])]
 
     def is_empty(self):
         """
