@@ -233,15 +233,11 @@ class RoomManager:
         if user is None:
             return web.json_response({"error": "Invalid user"}, status=403)
 
-        data = await request.json()
-        game = data["game"] if "game" in data else None
-        if game is None:
-            return web.json_response({"error": "Invalid request"}, status=400)
         room = user.current_room
         if room is None:
             return web.json_response({"error": "User not in a room"}, status=402)
         try:
-            result = room.save_game(user, game)
+            result = room.save_game()
             if 'error' in result:
                 return web.json_response(result, status=400)
             else:
