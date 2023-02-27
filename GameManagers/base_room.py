@@ -4,6 +4,8 @@ import hashlib
 
 class BaseRoom:
 
+    playable = False
+
     def __init__(self, database, name: str, host: User = None, password: str = None, from_save=None, **kwargs):
         self.database = database
         self.host = host

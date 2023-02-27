@@ -5,7 +5,7 @@ import time
 
 import chess
 
-from gamemanagers.base_room import BaseRoom
+from GameManagers.base_room import BaseRoom
 import logging
 
 from user import User
@@ -14,6 +14,8 @@ logging = logging.getLogger(__name__)
 
 
 class Chess(BaseRoom):
+
+    playable = True
 
     def __init__(self, database, host=None, name=None, password=None, from_save=False, **kwargs):
         super().__init__(database, name, host, password)
@@ -165,12 +167,13 @@ class Chess(BaseRoom):
         Saves the game to the database to be able to be loaded later
         :return:
         """
-        self.database.run("INSERT INTO chess_game_saves VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        self.database.run("INSERT INTO chess_game_saves VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                           (self.room_id, self.board.epd(hmvc=self.board.halfmove_clock,
                                                         fmvn=self.board.fullmove_number),
                            self.users[0].hash_id, self.users[1].hash_id if len(self.users) == 2 else None,
-                           self.board.turn, self.last_move, self.time_remaining[0], self.time_remaining[1],
-                           self.time_added_per_move, self.timers_enabled))
+                           self.board.turn, self.last_move,
+                           self.move_timers[0].total_seconds(), self.move_timers[1].total_seconds(),
+                           self.time_added_per_move.total_seconds(), self.timers_enabled))
         self.database.run("INSERT INTO room_saves VALUES (?, ?, ?, ?)", (self.room_id, self.__class__.__name__, self.name, self.password))
         return {"room_id": self.room_id, "room_type": "chess"}
 
@@ -226,7 +229,13 @@ class Chess(BaseRoom):
         Checks if any users have timed out and removes them from the room
         :return:
         """
+        all_offline = True
+        for user in self.users:
+            if user.online:
+                all_offline = False
 
         for spectator in self.spectators:
             if not spectator.online:
                 self.user_leave(spectator)
+
+        return all_offline

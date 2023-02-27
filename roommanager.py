@@ -1,13 +1,21 @@
 import time
 
 from aiohttp import web
+import os
 
-from gamemanagers.chess_room import Chess
+from GameManagers.base_room import BaseRoom
 from user import User, Users
 
 import logging
 
 logging = logging.getLogger(__name__)
+
+# Import all files in the gamemanagers folder
+logging.info("Loading all room modules")
+for file in os.listdir("GameManagers"):
+    if file.endswith(".py"):
+        exec(f"from GameManagers.{file[:-3]} import *")
+logging.info(f"Loaded {len(BaseRoom.__subclasses__())} room modules")
 
 
 class RoomManager:
@@ -16,9 +24,12 @@ class RoomManager:
         self.database = database
         self.database_init()
         self.rooms = {}
-        self.valid_room_types = {
-            Chess.__name__: Chess
-        }
+
+        self.valid_room_types = {}
+        for room_type in BaseRoom.__subclasses__():
+            if room_type.playable:
+                logging.info(f"Found room type: {room_type.__name__}")
+                self.valid_room_types[room_type.__name__] = room_type
         self.users = Users(self.database)
 
     def database_init(self):
@@ -307,7 +318,7 @@ class RoomManager:
         :return:
         """
         while True:
-            logging.info("Cleaning up rooms")
+            logging.debug("Cleaning up rooms")
             to_delete = []
             for room in self.rooms.values():
                 if room.is_empty():
@@ -315,5 +326,5 @@ class RoomManager:
                     to_delete.append(room.room_id)
             for room_id in to_delete:
                 self.rooms.pop(room_id)
-            logging.info("Finished cleaning up rooms")
+            logging.debug("Finished cleaning up rooms")
             time.sleep(30)
