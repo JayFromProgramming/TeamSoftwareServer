@@ -17,9 +17,12 @@ class Chess(BaseRoom):
 
     playable = True
 
-    def __init__(self, database, host=None, name=None, password=None, from_save=False, **kwargs):
-        super().__init__(database, name, host, password)
+    def __init__(self, database, host=None, name=None, starting_config=None, from_save=False, **kwargs):
+        super().__init__(database, name, host, starting_config)
         self.database_init()
+        if starting_config is None:
+            starting_config = {}
+
         if from_save:
             self.load_game(from_save, **kwargs)
         else:
@@ -115,11 +118,14 @@ class Chess(BaseRoom):
             if not self.board.move_stack:
                 time.sleep(1)
                 continue
+
             self.move_timers[0] -= datetime.timedelta(seconds=1) if self.board.turn == chess.WHITE else datetime.timedelta()
             self.move_timers[1] -= datetime.timedelta(seconds=1) if self.board.turn == chess.BLACK else datetime.timedelta()
 
             if self.move_timers[0] <= datetime.timedelta() or self.move_timers[1] <= datetime.timedelta():
                 self.state = "Time Up"
+                self.game_over = True
+                self.timers_enabled = False
             time.sleep(1)
 
     def post_move(self, user, move):

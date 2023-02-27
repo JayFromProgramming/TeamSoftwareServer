@@ -6,12 +6,14 @@ class BaseRoom:
 
     playable = False
 
-    def __init__(self, database, name: str, host: User = None, password: str = None, from_save=None, **kwargs):
+    def __init__(self, database, name: str, host: User = None, starting_config=None, from_save=None, **kwargs):
+        if starting_config is None:
+            starting_config = {}
         self.database = database
         self.host = host
         if self.host is not None:
             self.host.join_room(self)
-        self.password = password
+        self.password = starting_config["password"] if "password" in starting_config else None
         self.users = [self.host]  # type: list[User]
         self.spectators = []  # type: list[User]
         self.name = name

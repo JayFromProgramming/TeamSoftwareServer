@@ -50,7 +50,7 @@ class RoomManager:
         data = await request.json()
         room_type = data["room_type"] if "room_type" in data else None
         room_name = data["room_name"] if "room_name" in data else None
-        room_password = data["room_password"] if "room_password" in data else None
+        room_config = data["room_config"] if "room_config" in data else None
         cookie = request.cookies["hash_id"] if "hash_id" in request.cookies else None
         if cookie is None:
             logging.info(f"Missing cookie")
@@ -66,7 +66,7 @@ class RoomManager:
             logging.info(f"Invalid user: {cookie}")
             return web.json_response({"error": "Invalid user"}, status=400)
         try:
-            room = self.valid_room_types[room_type](self.database, name=room_name, host=user, password=room_password)
+            room = self.valid_room_types[room_type](self.database, name=room_name, host=user, starting_config=room_config)
             self.rooms[room.room_id] = room
             logging.info(f"Created room: {room.room_id}")
             return web.json_response({"room_id": room.room_id})
