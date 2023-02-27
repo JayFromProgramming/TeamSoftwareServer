@@ -159,10 +159,11 @@ class RoomManager:
 
     def get_room_state(self, request):
         """
-        Returns the state of a room
+        Returns the state of a room test
         :param request:
         :return:
         """
+        pass
 
     def has_room_changed(self, request):
         """
