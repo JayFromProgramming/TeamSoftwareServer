@@ -14,7 +14,10 @@ logging = logging.getLogger(__name__)
 logging.info("Loading all room modules")
 for file in os.listdir("GameManagers"):
     if file.endswith(".py"):
-        exec(f"from GameManagers.{file[:-3]} import *")
+        try:
+            exec(f"from GameManagers.{file[:-3]} import *")
+        except Exception as e:
+            logging.info(f"Failed to load {file}: {e}")
 logging.info(f"Loaded {len(BaseRoom.__subclasses__())} room modules")
 
 
