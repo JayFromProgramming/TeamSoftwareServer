@@ -35,7 +35,14 @@ class Checkers(BaseRoom):
         }
 
     def get_board_state(self, user):
-        pass
+        return {
+            "your_color": 0 if user == self.users[0] else 1 if user in self.users else None,
+            "current_player": 0 if self.current_player == self.users[0] else 1,
+            "board": [],
+            "last_move": str(self.last_move),
+            "game_over": self.game_over,
+            # "taken_pieces": self.taken_pieces
+        }
 
     def post_move(self, user, move):
         pass
@@ -54,5 +61,11 @@ class Checkers(BaseRoom):
         return all_offline
 
     def user_join(self, user):
-        pass
-
+        # Check if the user is already in the room
+        user.join_room(self)
+        if user in self.users + self.spectators:
+            return
+        if len(self.users) >= self.max_users:
+            self.spectators.append(user)
+        else:
+            self.users.append(user)
