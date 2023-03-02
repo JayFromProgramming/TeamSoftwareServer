@@ -92,8 +92,8 @@ class main:
             web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.runner = web.AppRunner(self.app)
-        #self.webserver_address = "wopr.eggs.loafclan.org"
-        self.webserver_address = "localhost"
+        self.webserver_address = "wopr.eggs.loafclan.org"
+        # self.webserver_address = "localhost"
         self.webserver_port = 47675
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
