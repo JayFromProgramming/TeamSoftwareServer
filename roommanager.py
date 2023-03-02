@@ -68,7 +68,7 @@ class RoomManager:
         try:
             room = self.valid_room_types[room_type](self.database, name=room_name, host=user, starting_config=room_config)
             self.rooms[room.room_id] = room
-            logging.info(f"Created room: {room.room_id}")
+            logging.info(f"Created room: {room.room_id} with starting config: {room_config}")
             return web.json_response({"room_id": room.room_id})
         except Exception as e:
             logging.exception(f"Failed to create room: {e}")

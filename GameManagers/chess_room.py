@@ -28,14 +28,14 @@ class Chess(BaseRoom):
             self.load_game(from_save, **kwargs)
         else:
             self.state = "Idle"
-            variant = starting_config["variant"] if "variant" in starting_config else "standard"
-            match variant:
+            self.variant = starting_config["chess_variant"] if "chess_variant" in starting_config else "chess_variant"
+            match self.variant:
                 case "Standard":
                     self.board = chess.Board()
                 case "Chess960":
                     self.board = chess.Board(chess960=True)
                     self.board.set_chess960_pos(random.randint(0, 959))
-                case "suicide":
+                case "Suicide":
                     self.board = chess.variant.SuicideBoard()
                 case "Crazyhouse":
                     self.board = chess.variant.CrazyhouseBoard()
@@ -45,6 +45,8 @@ class Chess(BaseRoom):
                     self.board = chess.variant.AtomicBoard()
                 case "Antichess":
                     self.board = chess.variant.AntichessBoard()
+                case "Horde":
+                    self.board = chess.variant.HordeBoard()
                 case _:
                     self.board = chess.Board()
 
@@ -59,6 +61,7 @@ class Chess(BaseRoom):
             self.score = 0
             self.last_move = None
             self.current_player = self.users[0]
+            self.taken_pieces = {"white": [], "black": []}
 
         self.game_over = False
         threading.Thread(target=self.timer_thread, daemon=True).start()
@@ -104,7 +107,8 @@ class Chess(BaseRoom):
             "state": self.state,
             "timers_enabled": self.timers_enabled,
             "game_over": self.game_over,
-            # "taken_pieces": self.taken_pieces
+            "variant": self.variant,
+            "taken_pieces": self.taken_pieces
         }
 
     def check_win_conditions(self):
@@ -126,8 +130,19 @@ class Chess(BaseRoom):
         elif self.board.is_check():
             self.state = f"{self.current_player.username} is in check"
             return False
-        else:
-            return False
+
+        # Run variant specific win conditions
+        if self.variant is not "Standard":
+            if self.board.is_variant_win():
+                self.state = "Variant Win"
+                return True
+            elif self.board.is_variant_loss():
+                self.state = "Variant Loss"
+                return True
+            elif self.board.is_variant_draw():
+                self.state = "Variant Draw"
+                return True
+        return False
 
     def timer_thread(self):
         """
