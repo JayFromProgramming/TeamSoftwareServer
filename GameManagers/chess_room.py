@@ -4,6 +4,7 @@ import threading
 import time
 
 import chess
+import chess.variant
 
 from GameManagers.base_room import BaseRoom
 import logging
@@ -27,13 +28,33 @@ class Chess(BaseRoom):
             self.load_game(from_save, **kwargs)
         else:
             self.state = "Idle"
-            # self.board = chess.Board(chess960=True).from_chess960_pos(random.randint(0, 959))
-            self.board = chess.Board()
+            variant = starting_config["variant"] if "variant" in starting_config else "standard"
+            match variant:
+                case "Standard":
+                    self.board = chess.Board()
+                case "Chess960":
+                    self.board = chess.Board(chess960=True)
+                    self.board.set_chess960_pos(random.randint(0, 959))
+                case "suicide":
+                    self.board = chess.variant.SuicideBoard()
+                case "Crazyhouse":
+                    self.board = chess.variant.CrazyhouseBoard()
+                case "Three Check":
+                    self.board = chess.variant.ThreeCheckBoard()
+                case "Atomic":
+                    self.board = chess.variant.AtomicBoard()
+                case "Antichess":
+                    self.board = chess.variant.AntichessBoard()
+                case _:
+                    self.board = chess.Board()
+
             self.max_users = 2
 
-            self.timers_enabled = True
-            self.move_timers = [datetime.timedelta(minutes=5), datetime.timedelta(minutes=5)]
-            self.time_added_per_move = datetime.timedelta(seconds=10)
+            self.timers_enabled = starting_config["timers_enabled"] if "timers_enabled" in starting_config else False
+            self.move_timers = [datetime.timedelta(minutes=starting_config["white_time"] if "white_time" in starting_config else 5),
+                                datetime.timedelta(minutes=starting_config["black_time"] if "black_time" in starting_config else 5)]
+            self.time_added_per_move = \
+                datetime.timedelta(seconds=starting_config["time_added_per_move"] if "time_added_per_move" in starting_config else 10)
 
             self.score = 0
             self.last_move = None

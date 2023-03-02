@@ -81,10 +81,10 @@ class RoomManager:
         :return:
         """
         logging.info(f"Room list request: {request}")
-        rooms = []
+        rooms = {"rooms": []}
         try:
             for room in self.rooms.values():
-                rooms.append(room.get_game_info())
+                rooms["rooms"].append(room.get_game_info())
         except Exception as e:
             logging.exception(f"Failed to get rooms: {e}")
             return web.json_response({"error": "Failed to get rooms"}, status=500)
