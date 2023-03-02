@@ -15,7 +15,6 @@ logging = logging.getLogger(__name__)
 
 
 class Chess(BaseRoom):
-
     playable = True
 
     def __init__(self, database, host=None, name=None, starting_config=None, from_save=False, **kwargs):
@@ -47,14 +46,18 @@ class Chess(BaseRoom):
                     self.board = chess.variant.AntichessBoard()
                 case "Horde":
                     self.board = chess.variant.HordeBoard()
+                case "King of the Hill":
+                    self.board = chess.variant.KingOfTheHillBoard()
+                case "Racing Kings":
+                    self.board = chess.variant.RacingKingsBoard()
                 case _:
                     self.board = chess.Board()
 
             self.max_users = 2
 
             self.timers_enabled = starting_config["timers_enabled"] if "timers_enabled" in starting_config else False
-            self.move_timers = [datetime.timedelta(minutes=starting_config["white_time"] if "white_time" in starting_config else 5),
-                                datetime.timedelta(minutes=starting_config["black_time"] if "black_time" in starting_config else 5)]
+            self.move_timers = [datetime.timedelta(seconds=starting_config["white_time"] if "white_time" in starting_config else 5),
+                                datetime.timedelta(seconds=starting_config["black_time"] if "black_time" in starting_config else 5)]
             self.time_added_per_move = \
                 datetime.timedelta(seconds=starting_config["time_added_per_move"] if "time_added_per_move" in starting_config else 10)
 
@@ -132,7 +135,7 @@ class Chess(BaseRoom):
             return False
 
         # Run variant specific win conditions
-        if self.variant is not "Standard":
+        if self.variant != "Standard":
             if self.board.is_variant_win():
                 self.state = "Variant Win"
                 return True
@@ -164,6 +167,23 @@ class Chess(BaseRoom):
                 self.timers_enabled = False
             time.sleep(1)
 
+    def check_if_capture(self, move):
+        """
+        Checks if the move will capture a piece and adds it to the taken pieces list
+        :param move: The move to check in UCI format
+        :return:
+        """
+        move = chess.Move.from_uci(move)
+        if self.board.is_capture(move):
+            # print(f"Move {move.uci()} is a capture")
+            piece = self.board.piece_at(move.to_square)
+            # Check for en passant
+            if piece is None:
+                # print(f"Move {move.uci()} is an en passant capture")
+                piece = self.board.piece_at(move.to_square + (-8 if self.board.turn == chess.WHITE else 8))
+            self.taken_pieces["white" if piece.color == chess.WHITE else "black"].append(piece.symbol())
+            # print(f"Taken pieces are now {self.taken_pieces}")
+
     def post_move(self, user, move):
         # print(user.username, move)
 
@@ -173,7 +193,9 @@ class Chess(BaseRoom):
         if user.user_id != self.current_player.user_id:
             logging.info(f"User {user.username} tried to move out of turn, current player is {self.current_player.username}")
             return {"error": "out_of_turn"}
+
         try:
+            self.check_if_capture(move)
             self.board.push_uci(move)
         except chess.IllegalMoveError:
             logging.info(f"User {user.username} tried to make an illegal move")

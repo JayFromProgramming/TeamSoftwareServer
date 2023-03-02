@@ -92,8 +92,9 @@ class main:
             web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.runner = web.AppRunner(self.app)
-        self.webserver_address = "wopr.eggs.loafclan.org"
+        # self.webserver_address = "wopr.eggs.loafclan.org"
         # self.webserver_address = "localhost"
+        self.webserver_address = "141.219.208.99"
         self.webserver_port = 47675
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
@@ -112,12 +113,14 @@ class main:
         # Check if a server ID table exists and create it if it doesn't
         if not self.database.get("SELECT name FROM sqlite_master WHERE type='table' AND name='server_id'"):
             hash = hashlib.sha256(str(random.getrandbits(256)).encode()).hexdigest()
-            self.database.run("CREATE TABLE IF NOT EXISTS server_id (id TEXT);")
-            self.database.run("INSERT INTO server_id VALUES (?)", (hash,))
+            server_name = input("Enter a name for this server: ")
+            self.database.run("CREATE TABLE IF NOT EXISTS server_id (id TEXT, name TEXT)")
+            self.database.run("INSERT INTO server_id VALUES (?, ?)", (hash, server_name))
 
     def get_server_id(self, request):
         server_id = self.database.get("SELECT id FROM server_id")[0][0]
-        return web.json_response({"server_id": server_id}, status=200)
+        server_name = self.database.get("SELECT name FROM server_id")[0][0]
+        return web.json_response({"server_id": server_id, "server_name": server_name}, status=200)
 
     def create_user(self, request):
         username = request.match_info.get('username')
