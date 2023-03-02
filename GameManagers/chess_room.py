@@ -301,8 +301,11 @@ class Chess(BaseRoom):
             if user.online:
                 all_offline = False
 
+        if all_offline:
+            self.users = []
+            self.spectators = []
+            return True
+
         for spectator in self.spectators:
             if not spectator.online:
                 self.user_leave(spectator)
-
-        return all_offline
