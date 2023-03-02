@@ -26,7 +26,7 @@ class Chess(BaseRoom):
         if from_save:
             self.load_game(from_save, **kwargs)
         else:
-            self.state = "Waiting for players..."
+            self.state = "Waiting..."
             self.variant = starting_config["chess_variant"] if "chess_variant" in starting_config else "chess_variant"
             match self.variant:
                 case "Standard":
