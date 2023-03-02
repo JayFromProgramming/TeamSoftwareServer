@@ -26,7 +26,7 @@ class Chess(BaseRoom):
         if from_save:
             self.load_game(from_save, **kwargs)
         else:
-            self.state = "Idle"
+            self.state = "Waiting for players..."
             self.variant = starting_config["chess_variant"] if "chess_variant" in starting_config else "chess_variant"
             match self.variant:
                 case "Standard":
@@ -189,6 +189,9 @@ class Chess(BaseRoom):
 
         for player in self.users + self.spectators:
             player.room_updated = True
+
+        if len(self.users) < 2:
+            return {"error": "not_enough_players"}
 
         if user.user_id != self.current_player.user_id:
             logging.info(f"User {user.username} tried to move out of turn, current player is {self.current_player.username}")
