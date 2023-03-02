@@ -4,6 +4,7 @@ import random
 import aiohttp
 import asyncio
 
+import requests
 from aiohttp import web
 import sqlite3
 import threading
@@ -13,6 +14,17 @@ from roommanager import RoomManager
 from user import User
 
 logging.basicConfig(level=logging.INFO)
+
+
+def get_external_ip():
+    """
+    Gets the external IP of the device
+    :return:
+    """
+    try:
+        return requests.get("https://api.ipify.org").text
+    except Exception:
+        return "localhost"
 
 
 class CustomLock:
@@ -92,9 +104,7 @@ class main:
             web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.runner = web.AppRunner(self.app)
-        # self.webserver_address = "wopr.eggs.loafclan.org"
-        # self.webserver_address = "localhost"
-        self.webserver_address = "141.219.208.99"
+        self.webserver_address = get_external_ip()
         self.webserver_port = 47675
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
