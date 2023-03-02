@@ -152,6 +152,7 @@ class main:
         user_hash = request.match_info.get('user_hash')
         user = self.room_manager.users.get_user(user_hash)
         if user is None:
+            logging.info(f"User with hash {user_hash} not found")
             return web.json_response({"error": "User not found"}, status=404)
         logging.info(f"Logging in user {user.username} with id {user.hash_id}")
         response = web.json_response({"username": user.username}, status=200)
