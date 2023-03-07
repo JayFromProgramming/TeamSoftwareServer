@@ -52,11 +52,11 @@ def multicast_discovery_recv(server_info, server_ip, server_port):
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
                     1)  # Allow multicast packets to loop back to local host
 
-    group = socket.inet_aton("224.0.1.255")
+    group = socket.inet_aton("225.0.0.250")
     mreq = struct.pack('4sL', group, socket.INADDR_ANY)  # Create the multicast request
 
     # Bind to the port
-    sock.bind(('', 47679))
+    sock.bind(('', 5007))
 
     # Join the multicast group
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
