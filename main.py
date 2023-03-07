@@ -48,7 +48,7 @@ def multicast_discovery_recv(server_info, server_ip, server_port):
     # Create the socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # Setup UDP socket
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow multiple sockets to use the same port
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)  # Limit multicast packets to local network
+    # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)  # Limit multicast packets to local network
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
                     1)  # Allow multicast packets to loop back to local host
 
