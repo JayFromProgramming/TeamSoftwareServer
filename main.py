@@ -56,7 +56,7 @@ def multicast_discovery_recv(server_info, server_ip, server_port):
     mreq = struct.pack('4sL', group, socket.INADDR_ANY)  # Create the multicast request
 
     # Bind to the port
-    sock.bind(('', 47674))
+    sock.bind(('', 47679))
 
     # Join the multicast group
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
@@ -154,7 +154,7 @@ class main:
             web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.webserver_address = get_interfaces()
-        self.webserver_port = 47675
+        self.webserver_port = 47672
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
         threading.Thread(target=multicast_discovery_recv,
