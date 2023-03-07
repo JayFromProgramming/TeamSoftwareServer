@@ -7,11 +7,9 @@ import chess
 import chess.variant
 
 from GameManagers.base_room import BaseRoom
-import logging
+from loguru import logger as logging
 
 from user import User
-
-logging = logging.getLogger(__name__)
 
 
 class Chess(BaseRoom):
@@ -20,6 +18,9 @@ class Chess(BaseRoom):
     def __init__(self, database, host=None, name=None, starting_config=None, from_save=False, **kwargs):
         super().__init__(database, name, host, starting_config)
         self.database_init()
+
+        logging.bind(room=self.name)
+
         if starting_config is None:
             starting_config = {}
 

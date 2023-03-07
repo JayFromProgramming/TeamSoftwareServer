@@ -1,6 +1,10 @@
-import logging
-import random
+import json
+import socket
+import struct
 
+from loguru import logger as logging
+import random
+import netifaces
 import aiohttp
 import asyncio
 
@@ -13,18 +17,64 @@ import hashlib
 from roommanager import RoomManager
 from user import User
 
-logging.basicConfig(level=logging.INFO)
+# Set the logging level to INFO
+
+logging.add("logs/{time}.log", rotation="1 week", retention="1 hour", compression="zip", level=10)
 
 
-def get_external_ip():
+def get_interfaces():
     """
-    Gets the external IP of the device
-    :return:
+    Gets all the ip addresses that can be bound to
     """
-    try:
-        return requests.get("https://api.ipify.org").text
-    except Exception:
-        return "localhost"
+    interfaces = []
+    for interface in netifaces.interfaces():
+        try:
+            if netifaces.AF_INET in netifaces.ifaddresses(interface):
+                for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+                    if link["addr"] != "":
+                        interfaces.append(link["addr"])
+        except Exception as e:
+            logging.debug(f"Error getting interface {interface}: {e}")
+            pass
+    return interfaces
+
+
+def multicast_discovery_recv(server_info, server_ip, server_port):
+    """
+    Multicast discovery to allow clients to easily find this server
+    """
+    logging.info("Starting multicast discovery")
+
+    # Create the socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # Setup UDP socket
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow multiple sockets to use the same port
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)  # Limit multicast packets to local network
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
+                    1)  # Allow multicast packets to loop back to local host
+
+    group = socket.inet_aton("225.0.0.250")
+    mreq = struct.pack('4sL', group, socket.INADDR_ANY)  # Create the multicast request
+
+    # Bind to the port
+    sock.bind(('', 47674))
+
+    # Join the multicast group
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+    while True:
+        try:
+            data, address = sock.recvfrom(1024)
+            logging.info(f"Received multicast discovery from {address}")
+            msg = {
+                "server_id": server_info[0],
+                "host": server_ip,
+                "port": server_port,
+                "name": server_info[1],
+            }
+            sock.sendto(json.dumps(msg).encode(), address)
+        except Exception as e:
+            logging.debug(f"Error in multicast discovery: {e}")
+            pass
 
 
 class CustomLock:
@@ -36,19 +86,19 @@ class CustomLock:
 
     def acquire(self, blocking=True, timeout=-1):
         self.lock_count += 1
-        logging.debug(f"Acquiring lock #{self.lock_count} (Queued: {self.queued_lock_count})")
+        # logging.debug(f"Acquiring lock #{self.lock_count} (Queued: {self.queued_lock_count})")
         self.queued_lock_count += 1
         acquired = self.lock.acquire(blocking, timeout)
         if acquired:
-            logging.debug(f"Acquired lock #{self.lock_count}")
+            # logging.debug(f"Acquired lock #{self.lock_count}")
             return True
         else:
-            logging.debug(f"Failed to acquire lock #{self.lock_count}")
+            # logging.debug(f"Failed to acquire lock #{self.lock_count}")
             self.queued_lock_count -= 1
             return False
 
     def release(self):
-        logging.debug(f"Releasing lock #{self.lock_count} (Queued: {self.queued_lock_count})")
+        # logging.debug(f"Releasing lock #{self.lock_count} (Queued: {self.queued_lock_count})")
         self.queued_lock_count -= 1
         self.lock.release()
 
@@ -103,12 +153,13 @@ class main:
             web.post('/room/save_game', self.room_manager.save_game),
             web.post('/room/load_game', self.room_manager.load_game),
         ])
-        self.runner = web.AppRunner(self.app)
-        self.webserver_address = get_external_ip()
+        self.webserver_address = get_interfaces()
         self.webserver_port = 47675
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
-
+        threading.Thread(target=multicast_discovery_recv,
+                         args=(self.get_server_id_internal(), self.webserver_address, self.webserver_port),
+                         daemon=True).start()
         self.runner = web.AppRunner(self.app)
 
     def run(self):
@@ -118,14 +169,20 @@ class main:
         logging.error("Webserver stopped")
 
     def init_database(self):
-        self.database.run("CREATE TABLE IF NOT EXISTS users (id INTEGER constraint table_name_pk primary key autoincrement, username TEXT, "
-                          "hash_id TEXT)")
+        self.database.run(
+            "CREATE TABLE IF NOT EXISTS users (id INTEGER constraint table_name_pk primary key autoincrement, username TEXT, "
+            "hash_id TEXT)")
         # Check if a server ID table exists and create it if it doesn't
         if not self.database.get("SELECT name FROM sqlite_master WHERE type='table' AND name='server_id'"):
             hash = hashlib.sha256(str(random.getrandbits(256)).encode()).hexdigest()
             server_name = input("Enter a name for this server: ")
             self.database.run("CREATE TABLE IF NOT EXISTS server_id (id TEXT, name TEXT)")
             self.database.run("INSERT INTO server_id VALUES (?, ?)", (hash, server_name))
+
+    def get_server_id_internal(self):
+        server_id = self.database.get("SELECT id FROM server_id")[0][0]
+        server_name = self.database.get("SELECT name FROM server_id")[0][0]
+        return server_id, server_name
 
     def get_server_id(self, request):
         server_id = self.database.get("SELECT id FROM server_id")[0][0]
