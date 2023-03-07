@@ -1,6 +1,7 @@
 import json
 import socket
 import struct
+import traceback
 
 from loguru import logger as logging
 import random
@@ -22,7 +23,7 @@ from user import User
 logging.add("logs/{time}.log", rotation="1 week", retention="1 hour", compression="zip", level=10)
 
 
-def get_interfaces():
+def get_host_names():
     """
     Gets all the ip addresses that can be bound to
     """
@@ -52,14 +53,24 @@ def multicast_discovery_recv(server_info, server_ip, server_port):
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
                     1)  # Allow multicast packets to loop back to local host
 
-    group = socket.inet_aton("224.1.1.1")
-    mreq = struct.pack('4sL', group, socket.INADDR_ANY)  # Create the multicast request
+    MCAST_GRP = socket.inet_aton("224.1.1.1")
+    # Create the multicast request
 
     # Bind to the port
     sock.bind(('', 5007))
-
     # Join the multicast group
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+    for interface in get_host_names():
+        try:
+            # Print which interface INADDR_ANY is bound to
+            host = socket.gethostbyname(interface)
+            print(f"Bound to {interface} ({host})")
+            mreq = MCAST_GRP + socket.inet_aton(interface)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            # logging.debug(f"Bound to interface {interface}")
+        except Exception as e:
+            logging.debug(f"Error binding to interface {interface}: {e}\n{traceback.format_exc()}")
+            pass
 
     while True:
         try:
@@ -153,7 +164,7 @@ class main:
             web.post('/room/save_game', self.room_manager.save_game),
             web.post('/room/load_game', self.room_manager.load_game),
         ])
-        self.webserver_address = get_interfaces()
+        self.webserver_address = get_host_names()
         self.webserver_port = 47672
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
