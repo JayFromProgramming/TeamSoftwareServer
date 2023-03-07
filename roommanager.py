@@ -322,7 +322,7 @@ class RoomManager:
         :return:
         """
         while True:
-            logging.debug("Cleaning up rooms")
+            # logging.debug("Cleaning up rooms")
             to_delete = []
             for room in self.rooms.values():
                 if room.is_empty():
@@ -330,5 +330,5 @@ class RoomManager:
                     to_delete.append(room.room_id)
             for room_id in to_delete:
                 self.rooms.pop(room_id)
-            logging.debug("Finished cleaning up rooms")
+            # logging.debug("Finished cleaning up rooms")
             time.sleep(30)
