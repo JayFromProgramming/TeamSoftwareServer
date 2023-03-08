@@ -182,5 +182,6 @@ class BattleShip(BaseRoom):
                 return {"error": "It is not your turn."}
 
             if self.boards[self.users.index(user)].is_hit(move["x"], move["y"]):
+                pass
 
 
