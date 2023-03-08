@@ -40,6 +40,22 @@ def get_host_names():
     return interfaces
 
 
+def check_interface_usage(port):
+    """
+    Returns a list of interfaces that are currently not being used
+    :return:
+    """
+    interfaces = get_host_names()
+    for interface in interfaces:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind((interface, port))
+            s.close()
+        except OSError:
+            interfaces.remove(interface)
+    return interfaces
+
+
 def multicast_discovery(server_info, server_ip, server_port):
     """
     Multicast discovery to allow clients to easily find this server
@@ -158,7 +174,7 @@ class main:
             web.post('/room/save_game', self.room_manager.save_game),
             web.post('/room/load_game', self.room_manager.load_game),
         ])
-        self.webserver_address = get_host_names()
+        self.webserver_address = check_interface_usage(47672)
         self.webserver_port = 47672
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
@@ -172,7 +188,7 @@ class main:
         try:
             web.run_app(self.app, host=self.webserver_address, port=self.webserver_port,
                         access_log=None)
-        except OSError as e:
+        except Exception as e:
             logging.error(f"Error starting webserver: {e}")
         logging.error("Webserver stopped")
 
