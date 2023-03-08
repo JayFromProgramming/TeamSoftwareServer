@@ -154,8 +154,8 @@ class BattleShip(BaseRoom):
         if user in self.users:
             return
         if len(self.users) >= self.max_users:
-            if self.allow_spectators:
-                self.spectators.append(user)
+            self.spectators.append(user)
+            return
         else:
             self.users.append(user)
 
