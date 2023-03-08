@@ -18,19 +18,22 @@ class BattleShip(BaseRoom):
             self.sunk = False
             self.placed = False
 
-        def is_hit(self, x, y):
+        def is_hit(self, x, y, is_shot):
             if self.direction == "horizontal":
-                if self.x <= x <= self.x + self.size and self.y == y:
-                    self.health[x - self.x] = False
-                    if not any(self.health):
-                        self.sunk = True
+                if self.x <= x < self.x + self.size and self.y == y:
+                    if is_shot:
+                        self.health[x - self.x] = False
+                        if not any(self.health):
+                            self.sunk = True
                     return True
             else:
-                if self.y <= y <= self.y + self.size and self.x == x:
-                    self.health[y - self.y] = False
-                    if not any(self.health):
-                        self.sunk = True
+                if self.y <= y < self.y + self.size and self.x == x:
+                    if is_shot:
+                        self.health[y - self.y] = False
+                        if not any(self.health):
+                            self.sunk = True
                     return True
+            return False
 
         def encode_friendly(self):
             return {
@@ -80,10 +83,10 @@ class BattleShip(BaseRoom):
                     # Use the 'is_hit' method to check each coordinate of the this ship
                     for i in range(ship.size):
                         if direction == "horizontal":
-                            if other_ship.is_hit(x + i, y):
+                            if other_ship.is_hit(x + i, y, False):
                                 return False
                         else:
-                            if other_ship.is_hit(x, y + i):
+                            if other_ship.is_hit(x, y + i, False):
                                 return False
 
             # Place the ship
@@ -95,7 +98,7 @@ class BattleShip(BaseRoom):
 
         def is_hit(self, x, y):
             for ship in self.ships:
-                if ship.is_hit(x, y):
+                if ship.is_hit(x, y, True):
                     self.board[x][y] = 1
                     return True
             self.board[x][y] = 2
