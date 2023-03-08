@@ -89,6 +89,9 @@ class User:
     def __str__(self):
         return self.user_id
 
+    def __repr__(self):
+        return "User: " + self.username
+
     def encode(self):
         """
         Encodes the user object
@@ -171,3 +174,4 @@ class Users:
             if user.user_id == user_id:
                 return user
         return None
+

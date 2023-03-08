@@ -138,7 +138,7 @@ class BattleShip(BaseRoom):
         self.board_size = starting_config["board_size"] if "board_size" in starting_config else 10
         ships = starting_config["ships"] if "ships" in starting_config else 5
         self.spectator_fog_of_war = starting_config[
-            "spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else True
+            "spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else False
 
         self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
 
