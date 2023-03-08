@@ -6,7 +6,7 @@ class Checkers(BaseRoom):
 
     def __init__(self, database, host=None, name=None, config=None):
         super().__init__(database, name, host, config)
-        if config == None:
+        if config is None:
             config = {}
 
         self.state = "Idle"

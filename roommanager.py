@@ -33,6 +33,8 @@ class RoomManager:
             if room_type.playable:
                 logging.info(f"Found room type: {room_type.__name__}")
                 self.valid_room_types[room_type.__name__] = room_type
+            else:
+                logging.info(f"Found non-playable room type: {room_type.__name__}")
         self.users = Users(self.database)
 
     def database_init(self):
@@ -46,7 +48,7 @@ class RoomManager:
         :param request: A web request
         :return:
         """
-        logging.info(f"Room creation request: {request}")
+        logging.info(f"Room creation request from {request.remote}")
         data = await request.json()
         room_type = data["room_type"] if "room_type" in data else None
         room_name = data["room_name"] if "room_name" in data else None
@@ -80,7 +82,7 @@ class RoomManager:
         :param request: A web request
         :return:
         """
-        logging.info(f"Room list request: {request}")
+        logging.info(f"Room list request from {request.remote}")
         rooms = {"rooms": []}
         try:
             for room in self.rooms.values():
@@ -174,7 +176,7 @@ class RoomManager:
         :param request:
         :return:
         """
-        logging.debug(f"Room change request: {request}")
+        # logging.debug(f"Room change request: {request}")
         if "user_hash" not in request.cookies:
             return web.json_response({"error": "Missing Authentication"}, status=401)
         user = self.users.get_user(request.cookies["user_hash"])
@@ -196,7 +198,7 @@ class RoomManager:
         :param request:
         :return:
         """
-        logging.info(f"Board state request: {request}")
+        logging.info(f"Board state request from endpoint: {request.remote}")
         if "user_hash" not in request.cookies:
             return web.json_response({"error": "Missing Authentication"}, status=401)
         user = self.users.get_user(request.cookies["user_hash"])
@@ -322,7 +324,7 @@ class RoomManager:
         :return:
         """
         while True:
-            logging.debug("Cleaning up rooms")
+            # logging.debug("Cleaning up rooms")
             to_delete = []
             for room in self.rooms.values():
                 if room.is_empty():
@@ -330,5 +332,5 @@ class RoomManager:
                     to_delete.append(room.room_id)
             for room_id in to_delete:
                 self.rooms.pop(room_id)
-            logging.debug("Finished cleaning up rooms")
+            # logging.debug("Finished cleaning up rooms")
             time.sleep(30)

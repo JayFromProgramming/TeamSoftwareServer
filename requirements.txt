@@ -1,0 +1,7 @@
+wheel
+aiohttp
+rich
+loguru
+requests
+chess
+netifaces
