@@ -176,7 +176,7 @@ class main:
             web.post('/room/load_game', self.room_manager.load_game),
         ])
         self.webserver_address = check_interface_usage(47672)
-        self.webserver_port = 47672
+        self.webserver_port = 47673
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
         threading.Thread(target=multicast_discovery,
