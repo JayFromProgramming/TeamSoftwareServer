@@ -139,6 +139,7 @@ class BattleShip(BaseRoom):
         ships = starting_config["ships"] if "ships" in starting_config else 5
         self.spectator_fog_of_war = starting_config[
             "spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else False
+        self.spectator_fog_of_war = False
 
         self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
 
@@ -193,15 +194,15 @@ class BattleShip(BaseRoom):
                 return {
                     "state": self.state,
                     "current_player": self.current_player.user_id,
-                    "board": self.boards[self.users.index(self.current_player)].encode_enemy(),
-                    "enemy_board": self.boards[self.users.index(self.current_player) - 1].encode_enemy()
+                    "board": self.boards[0].encode_enemy(),
+                    "enemy_board": self.boards[1].encode_enemy()
                 }
             else:
                 return {
                     "state": self.state,
                     "current_player": self.current_player.user_id,
-                    "board": self.boards[self.users.index(self.current_player)].encode_friendly(),
-                    "enemy_board": self.boards[self.users.index(self.current_player)].encode_friendly()
+                    "board": self.boards[0].encode_friendly(),
+                    "enemy_board": self.boards[1].encode_friendly()
                 }
 
     def get_board(self, user):
