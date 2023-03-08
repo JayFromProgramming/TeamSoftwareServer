@@ -57,28 +57,41 @@ class BattleShip(BaseRoom):
             self.board = [[0 for _ in range(size)] for _ in range(size)]
             self.ships = [BattleShip.Ship(x + 1) for x in range(ships)]
 
-        def place_ship(self, ship):
-            # Check if the ship is in bounds
-            if ship.direction == "horizontal":
-                if ship.x + ship.size > self.size:
+        def get_ship(self, size):
+            for ship in self.ships:
+                if ship.size == size:
+                    return ship
+            return None
+
+        def place_ship(self, ship, x, y, direction):
+            # Check if the ship is in bounds and not overlapping
+            if x > self.size or y > self.size or 0 > x or 0 > y:
+                return False
+
+            if direction == "horizontal":
+                if x + ship.size > self.size:
                     return False
             else:
-                if ship.y + ship.size > self.size:
+                if y + ship.size > self.size:
                     return False
+
             # Check if the ship is overlapping with another ship
-            for x in range(ship.x, ship.x + ship.size):
-                for y in range(ship.y, ship.y + ship.size):
-                    if self.board[y][x] != 0:
-                        return False
-            # Check if this ship class has not been placed yet
-            for placed_ship in self.ships:
-                if placed_ship.size == ship.size:
-                    return False
+            for other_ship in self.ships:
+                if other_ship.placed:
+                    # Use the 'is_hit' method to check each coordinate of the this ship
+                    for i in range(ship.size):
+                        if direction == "horizontal":
+                            if other_ship.is_hit(x + i, y):
+                                return False
+                        else:
+                            if other_ship.is_hit(x, y + i):
+                                return False
+
             # Place the ship
-            self.ships.append(ship)
-            # Check if all ships have been placed
-            if len(self.ships) == 5:
-                self.ready = True
+            ship.x = x
+            ship.y = y
+            ship.direction = direction
+            ship.placed = True
             return True
 
         def is_hit(self, x, y):
@@ -181,10 +194,13 @@ class BattleShip(BaseRoom):
             player.room_updated = True
 
         if not self.both_ready:
+            logging.debug(move)
             for ship in move["placed_ships"]:
-                if not self.boards[self.users.index(user)].place_ship(
-                        self.Ship(ship["size"], ship["x"], ship["y"], ship["direction"])):
+                ship_obj = self.boards[self.users.index(user)].get_ship(ship["size"])
+                if not self.boards[self.users.index(user)].place_ship(ship_obj, ship["x"], ship["y"], ship["direction"]):
                     return {"error": "Invalid ship placement."}
+                logging.info(f"User {user.username} placed a ship of size {ship['size']} at ({ship['x']}, {ship['y']})"
+                                f" facing {ship['direction']}")
             if [board.ready for board in self.boards] == [True, True]:
                 self.state = "In Progress"
                 self.both_ready = True
@@ -195,3 +211,5 @@ class BattleShip(BaseRoom):
 
             if self.boards[self.users.index(user)].is_hit(move["x"], move["y"]):
                 pass
+
+        return {"success": True}

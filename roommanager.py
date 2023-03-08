@@ -223,12 +223,13 @@ class RoomManager:
         data = await request.json()
         move = data["move"] if "move" in data else None
         if move is None:
+            logging.warning(f"Invalid move request: {data}")
             return web.json_response({"error": "Invalid request"}, status=400)
         room = user.current_room
         if room is None:
+            logging.warning(f"User {user.user_id} not in a room")
             return web.json_response({"error": "User not in a room"}, status=402)
         try:
-            # print(user.username, move)
             result = room.post_move(user, move)
             if 'error' in result:
                 return web.json_response(result, status=400)
