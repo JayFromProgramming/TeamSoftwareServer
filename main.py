@@ -169,8 +169,11 @@ class main:
 
     def run(self):
         logging.info("Starting webserver")
-        web.run_app(self.app, host=self.webserver_address, port=self.webserver_port,
-                    access_log=None)
+        try:
+            web.run_app(self.app, host=self.webserver_address, port=self.webserver_port,
+                        access_log=None)
+        except OSError as e:
+            logging.error(f"Error starting webserver: {e}")
         logging.error("Webserver stopped")
 
     def init_database(self):
