@@ -204,6 +204,11 @@ class BattleShip(BaseRoom):
                     "enemy_board": self.boards[self.users.index(self.current_player)].encode_friendly()
                 }
 
+    def get_board(self, user):
+        if user in self.users:
+            return self.boards[self.users.index(user)]
+        return None
+
     def post_move(self, user, move):
 
         for player in self.users + self.spectators:
@@ -229,13 +234,16 @@ class BattleShip(BaseRoom):
                 logging.info(f"{user.username} tried to make a move out of turn.")
                 return {"error": "It is not your turn."}
 
-            if self.boards[self.users.index(user) - 1].is_hit(move["x"], move["y"]):
+            if len(self.users) == 2:
+                self.current_player = self.users[1] if self.current_player == self.users[0] else self.users[0]
+            else:
+                self.current_player = self.users[0]
+
+            if self.get_board(self.current_player).is_hit(move["x"], move["y"]):
                 logging.info(f"{user.username} hit ({move['x']}, {move['y']})")
-                if self.boards[self.users.index(user) - 1].all_sunk():
+                if self.get_board(self.current_player).all_sunk():
                     self.state = "Game Over"
                     self.winner = user
                     logging.info(f"{user.username} won {self.room_id}")
-                else:
-                    self.current_player = self.users[self.users.index(user) - 1]
 
         return {"success": True}
