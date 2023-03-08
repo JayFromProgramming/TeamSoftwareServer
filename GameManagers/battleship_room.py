@@ -3,18 +3,20 @@ import logging
 
 logging = logging.getLogger(__name__)
 
+
 class BattleShip(BaseRoom):
     playable = True
 
     class Ship:
 
-        def __init__(self, size, x, y, direction):
+        def __init__(self, size, x=None, y=None, direction=None):
             self.size = size
             self.health = [True for _ in range(size)]
             self.x = x
             self.y = y
             self.direction = direction
             self.sunk = False
+            self.placed = False
 
         def is_hit(self, x, y):
             if self.direction == "horizontal":
@@ -36,22 +38,24 @@ class BattleShip(BaseRoom):
                 "x": self.x,
                 "y": self.y,
                 "direction": self.direction,
-                "sunk": self.sunk
+                "sunk": self.sunk,
+                "placed": self.placed
             }
 
         def encode_enemy(self):
             return {
                 "size": self.size,
-                "sunk": self.sunk
+                "sunk": self.sunk,
+                "placed": self.placed
             }
 
     class Board:
 
-        def __init__(self, size):
+        def __init__(self, size, ships):
             self.size = size
             self.ready = False
             self.board = [[0 for _ in range(size)] for _ in range(size)]
-            self.ships = []
+            self.ships = [BattleShip.Ship(x + 1) for x in range(ships)]
 
         def place_ship(self, ship):
             # Check if the ship is in bounds
@@ -104,9 +108,11 @@ class BattleShip(BaseRoom):
         self.max_users = 2
         self.state = "Awaiting Boards..."
         self.board_size = starting_config["board_size"] if "board_size" in starting_config else 10
-        self.spectator_fog_of_war = starting_config["spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else True
+        ships = starting_config["ships"] if "ships" in starting_config else 5
+        self.spectator_fog_of_war = starting_config[
+            "spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else True
 
-        self.boards = [self.Board(self.board_size), self.Board(self.board_size)]
+        self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
 
         self.both_ready = False
         self.current_player = self.users[0] if len(self.users) > 0 else None
@@ -133,7 +139,10 @@ class BattleShip(BaseRoom):
             self.spectators.remove(user)
 
     def frequent_update(self):
-        pass
+        return {
+            "players": [user.encode() for user in self.users],
+            "spectators": [user.encode() for user in self.spectators]
+        }
 
     def get_game_info(self):
         info = super().get_game_info()
@@ -146,7 +155,9 @@ class BattleShip(BaseRoom):
                 "state": self.state,
                 "current_player": self.current_player.user_id,
                 "board": self.boards[self.users.index(user)].encode_friendly(),
-                "enemy_board": self.boards[self.users.index(user) - 1].encode_enemy()
+                "enemy_board": self.boards[self.users.index(user) - 1].encode_enemy(),
+                "allow_place_ships": self.boards[self.users.index(user)].ready is False,
+                "board_size": self.board_size,
             }
         elif user in self.spectators:
             if self.spectator_fog_of_war:
@@ -171,7 +182,8 @@ class BattleShip(BaseRoom):
 
         if not self.both_ready:
             for ship in move["placed_ships"]:
-                if not self.boards[self.users.index(user)].place_ship(self.Ship(ship["size"], ship["x"], ship["y"], ship["direction"])):
+                if not self.boards[self.users.index(user)].place_ship(
+                        self.Ship(ship["size"], ship["x"], ship["y"], ship["direction"])):
                     return {"error": "Invalid ship placement."}
             if [board.ready for board in self.boards] == [True, True]:
                 self.state = "In Progress"
@@ -183,5 +195,3 @@ class BattleShip(BaseRoom):
 
             if self.boards[self.users.index(user)].is_hit(move["x"], move["y"]):
                 pass
-
-

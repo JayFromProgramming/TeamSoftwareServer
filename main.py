@@ -85,14 +85,17 @@ def multicast_discovery(server_info, server_ip, server_port):
     while True:
         try:
             data, address = sock.recvfrom(1024)
-            logging.info(f"Received multicast discovery from {address}")
-            msg = {
-                "server_id": server_info[0],
-                "host": server_ip,
-                "port": server_port,
-                "name": server_info[1],
-            }
-            sock.sendto(json.dumps(msg).encode(), address)
+            if data == b"DISCOVER_GAME_SERVER":
+                logging.info(f"Received multicast discovery from {address}")
+                msg = {
+                    "server_id": server_info[0],
+                    "host": server_ip,
+                    "port": server_port,
+                    "name": server_info[1],
+                }
+                sock.sendto(json.dumps(msg).encode(), address)
+            else:
+                logging.info(f"Received unknown multicast message from {address}")
         except Exception as e:
             logging.debug(f"Error in multicast discovery: {e}")
             pass
@@ -175,8 +178,8 @@ class main:
             web.post('/room/save_game', self.room_manager.save_game),
             web.post('/room/load_game', self.room_manager.load_game),
         ])
-        self.webserver_address = check_interface_usage(47672)
         self.webserver_port = 47673
+        self.webserver_address = check_interface_usage(self.webserver_port)
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
         threading.Thread(target=multicast_discovery,

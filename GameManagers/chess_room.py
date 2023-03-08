@@ -291,21 +291,3 @@ class Chess(BaseRoom):
 
         self.current_player = self.users[0] if self.board.turn == chess.WHITE else self.users[1]
 
-    def is_empty(self):
-        """
-        Checks if any users have timed out and removes them from the room
-        :return:
-        """
-        all_offline = True
-        for user in self.users:
-            if user.online and user.current_room == self:
-                all_offline = False
-
-        if all_offline:
-            self.users = []
-            self.spectators = []
-            return True
-
-        for spectator in self.spectators:
-            if not spectator.online:
-                self.user_leave(spectator)

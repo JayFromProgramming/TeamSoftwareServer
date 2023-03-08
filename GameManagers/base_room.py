@@ -108,4 +108,21 @@ class BaseRoom:
         raise NotImplementedError
 
     def is_empty(self):
-        raise NotImplementedError
+        """
+        Checks if any users have timed out and removes them from the room
+        :return:
+        """
+        all_offline = True
+        for user in self.users:
+            if user.online and user.current_room == self:
+                all_offline = False
+
+        if all_offline:
+            self.users = []
+            self.spectators = []
+            return True
+
+        for spectator in self.spectators:
+            if not spectator.online:
+                self.user_leave(spectator)
+
