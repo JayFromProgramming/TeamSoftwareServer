@@ -197,6 +197,7 @@ class BattleShip(BaseRoom):
                     "board": self.boards[0].encode_friendly(),
                     "enemy_board": self.boards[1].encode_friendly(),
                     "board_size": self.board_size,
+                    "allow_place_ships": False,
                     "your_move": False,
                 }
             else:
@@ -206,6 +207,7 @@ class BattleShip(BaseRoom):
                     "board": self.boards[0].encode_friendly(),
                     "enemy_board": self.boards[1].encode_friendly(),
                     "board_size": self.board_size,
+                    "allow_place_ships": False,
                     "your_move": False
                 }
 
