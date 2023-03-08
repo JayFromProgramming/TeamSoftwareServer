@@ -40,7 +40,7 @@ def get_host_names():
     return interfaces
 
 
-def multicast_discovery_recv(server_info, server_ip, server_port):
+def multicast_discovery(server_info, server_ip, server_port):
     """
     Multicast discovery to allow clients to easily find this server
     """
@@ -50,27 +50,22 @@ def multicast_discovery_recv(server_info, server_ip, server_port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # Setup UDP socket
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow multiple sockets to use the same port
     # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)  # Limit multicast packets to local network
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
-                    1)  # Allow multicast packets to loop back to local host
+    # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
+    #                 1)  # Allow multicast packets to loop back to local host
 
-    MCAST_GRP = socket.inet_aton("224.1.1.1")
-    # Create the multicast request
+    MCAST_GRP = socket.inet_aton("224.1.1.1")  # Set the multicast group
 
     # Bind to the port
     sock.bind(('', 5007))
     # Join the multicast group
 
-    for interface in get_host_names():
-        try:
-            # Print which interface INADDR_ANY is bound to
-            host = socket.gethostbyname(interface)
-            print(f"Bound to {interface} ({host})")
-            mreq = MCAST_GRP + socket.inet_aton(interface)
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-            # logging.debug(f"Bound to interface {interface}")
-        except Exception as e:
-            logging.debug(f"Error binding to interface {interface}: {e}\n{traceback.format_exc()}")
-            pass
+    host = socket.gethostbyname(socket.gethostname())
+    mreq = MCAST_GRP + socket.inet_aton(host)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+
+
+    logging.info(f"Multicast discovery bound to MCAST_GRP 224.1.1.1 on port 5007")
 
     while True:
         try:
@@ -119,6 +114,7 @@ class ConcurrentDatabase(sqlite3.Connection):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.lock = CustomLock()
+        logging.info("Database initialized")
 
     def run(self, sql, *args, **kwargs):
         self.lock.acquire()
@@ -168,7 +164,7 @@ class main:
         self.webserver_port = 47672
 
         threading.Thread(target=self.room_manager.cleanup_rooms, daemon=True).start()
-        threading.Thread(target=multicast_discovery_recv,
+        threading.Thread(target=multicast_discovery,
                          args=(self.get_server_id_internal(), self.webserver_address, self.webserver_port),
                          daemon=True).start()
         self.runner = web.AppRunner(self.app)
