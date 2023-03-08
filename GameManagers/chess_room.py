@@ -158,13 +158,12 @@ class Chess(BaseRoom):
                 time.sleep(1)
                 continue
 
-            self.move_timers[0] -= datetime.timedelta(seconds=1) if self.board.turn == chess.WHITE else datetime.timedelta()
-            self.move_timers[1] -= datetime.timedelta(seconds=1) if self.board.turn == chess.BLACK else datetime.timedelta()
-
-            if self.move_timers[0] <= datetime.timedelta() or self.move_timers[1] <= datetime.timedelta():
+            if self.move_timers[0] <= datetime.timedelta(seconds=0) or self.move_timers[1] <= datetime.timedelta(seconds=0):
                 self.state = "Time Up"
                 self.game_over = True
-                self.timers_enabled = False
+            else:
+                self.move_timers[0] -= datetime.timedelta(seconds=1) if self.board.turn == chess.WHITE else datetime.timedelta()
+                self.move_timers[1] -= datetime.timedelta(seconds=1) if self.board.turn == chess.BLACK else datetime.timedelta()
             time.sleep(1)
 
     def check_if_capture(self, move):
@@ -298,7 +297,7 @@ class Chess(BaseRoom):
         """
         all_offline = True
         for user in self.users:
-            if user.online:
+            if user.online and user.current_room == self:
                 all_offline = False
 
         if all_offline:
