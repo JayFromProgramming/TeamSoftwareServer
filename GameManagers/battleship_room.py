@@ -193,16 +193,20 @@ class BattleShip(BaseRoom):
             if self.spectator_fog_of_war:
                 return {
                     "state": self.state,
-                    "current_player": self.current_player.user_id,
-                    "board": self.boards[0].encode_enemy(),
-                    "enemy_board": self.boards[1].encode_enemy()
+                    "current_player": self.current_player.encode(),
+                    "board": self.boards[0].encode_friendly(),
+                    "enemy_board": self.boards[1].encode_friendly(),
+                    "board_size": self.board_size,
+                    "your_move": False,
                 }
             else:
                 return {
                     "state": self.state,
-                    "current_player": self.current_player.user_id,
+                    "current_player": self.current_player.encode(),
                     "board": self.boards[0].encode_friendly(),
-                    "enemy_board": self.boards[1].encode_friendly()
+                    "enemy_board": self.boards[1].encode_friendly(),
+                    "board_size": self.board_size,
+                    "your_move": False
                 }
 
     def get_board(self, user):
