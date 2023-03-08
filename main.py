@@ -52,6 +52,7 @@ def check_interface_usage(port):
             s.bind((interface, port))
             s.close()
         except OSError:
+            logging.warning(f"Interface {interface}:{port} was already in use")
             interfaces.remove(interface)
     return interfaces
 
