@@ -63,8 +63,6 @@ def multicast_discovery(server_info, server_ip, server_port):
     mreq = MCAST_GRP + socket.inet_aton(host)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-
-
     logging.info(f"Multicast discovery bound to MCAST_GRP 224.1.1.1 on port 5007")
 
     while True:
