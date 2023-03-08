@@ -53,7 +53,6 @@ class BattleShip(BaseRoom):
 
         def __init__(self, size, ships):
             self.size = size
-            self.ready = False
             self.board = [[0 for _ in range(size)] for _ in range(size)]
             self.ships = [BattleShip.Ship(x + 1) for x in range(ships)]
 
@@ -97,8 +96,9 @@ class BattleShip(BaseRoom):
         def is_hit(self, x, y):
             for ship in self.ships:
                 if ship.is_hit(x, y):
-                    self.board[y][x] = 1
+                    self.board[x][y] = 1
                     return True
+            self.board[x][y] = 2
             return False
 
         def encode_friendly(self):
@@ -112,6 +112,18 @@ class BattleShip(BaseRoom):
                 "board": self.board,
                 "ships": [ship.encode_enemy() for ship in self.ships]
             }
+
+        def ready(self):
+            for ship in self.ships:
+                if not ship.placed:
+                    return False
+            return True
+
+        def all_sunk(self):
+            for ship in self.ships:
+                if not ship.sunk:
+                    return False
+            return True
 
     def __init__(self, database, host=None, name=None, starting_config=None, from_save=False, **kwargs):
         super().__init__(database, name, host, starting_config)
@@ -166,10 +178,11 @@ class BattleShip(BaseRoom):
         if user in self.users:
             return {
                 "state": self.state,
-                "current_player": self.current_player.user_id,
+                "current_player": self.current_player.encode(),
+                "your_move": True if user == self.current_player else False,
                 "board": self.boards[self.users.index(user)].encode_friendly(),
                 "enemy_board": self.boards[self.users.index(user) - 1].encode_enemy(),
-                "allow_place_ships": self.boards[self.users.index(user)].ready is False,
+                "allow_place_ships": self.boards[self.users.index(user)].ready() is False,
                 "board_size": self.board_size,
             }
         elif user in self.spectators:
@@ -195,21 +208,31 @@ class BattleShip(BaseRoom):
 
         if not self.both_ready:
             logging.debug(move)
+            if "placed_ships" not in move:
+                return {"error": "No placement data"}
             for ship in move["placed_ships"]:
                 ship_obj = self.boards[self.users.index(user)].get_ship(ship["size"])
                 if not self.boards[self.users.index(user)].place_ship(ship_obj, ship["x"], ship["y"], ship["direction"]):
                     return {"error": "Invalid ship placement."}
                 logging.info(f"User {user.username} placed a ship of size {ship['size']} at ({ship['x']}, {ship['y']})"
                                 f" facing {ship['direction']}")
-            if [board.ready for board in self.boards] == [True, True]:
+            if [board.ready() for board in self.boards] == [True, True]:
                 self.state = "In Progress"
                 self.both_ready = True
+                self.current_player = self.users[0]
+                logging.info(f"{self.room_id} both players ready, starting game")
         else:
             if user.hash_id != self.current_player.hash_id:
                 logging.info(f"{user.username} tried to make a move out of turn.")
                 return {"error": "It is not your turn."}
 
-            if self.boards[self.users.index(user)].is_hit(move["x"], move["y"]):
-                pass
+            if self.boards[self.users.index(user) - 1].is_hit(move["x"], move["y"]):
+                logging.info(f"{user.username} hit ({move['x']}, {move['y']})")
+                if self.boards[self.users.index(user) - 1].all_sunk():
+                    self.state = "Game Over"
+                    self.winner = user
+                    logging.info(f"{user.username} won {self.room_id}")
+                else:
+                    self.current_player = self.users[self.users.index(user) - 1]
 
         return {"success": True}
