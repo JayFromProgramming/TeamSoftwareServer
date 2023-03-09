@@ -6,9 +6,7 @@ import os
 from GameManagers.base_room import BaseRoom
 from user import User, Users
 
-import logging
-
-logging = logging.getLogger(__name__)
+from loguru import logger as logging
 
 # Import all files in the gamemanagers folder
 logging.info("Loading all room modules")
