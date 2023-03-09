@@ -1,6 +1,7 @@
 import json
 import socket
 import struct
+import sys
 import traceback
 
 from loguru import logger as logging
@@ -19,8 +20,9 @@ from roommanager import RoomManager
 from user import User
 
 # Set the logging level to INFO
-
-logging.add("logs/{time}.log", rotation="1 week", retention="1 hour", compression="zip", level=10)
+logging.remove()
+logging.add(sys.stdout, level="INFO")
+logging.add("logs/{time}.log", level="INFO")
 
 
 def get_host_names():
