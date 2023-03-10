@@ -62,6 +62,14 @@ class User:
         """
         self.last_ping = datetime.datetime.now()
 
+    def logout(self):
+        """
+        Logs out the user
+        :return:
+        """
+        self.leave_room()
+        self.last_ping = datetime.datetime.fromtimestamp(0)
+
     @property
     def online(self):
         """

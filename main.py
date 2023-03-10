@@ -167,6 +167,7 @@ class main:
             web.get('/create_user/{username}', self.create_user),
             web.get('/get_user/{user_id}', self.get_username),
             web.get('/login/{user_hash}', self.login),
+            web.post('/logout', self.logout),
             web.get('/get_rooms', self.room_manager.get_rooms),
             web.get('/get_games', self.room_manager.get_available_games),
             web.get('/room/get_state', self.room_manager.get_board_state),
@@ -242,6 +243,16 @@ class main:
         response = web.json_response({"username": user.username}, status=200)
         response.set_cookie("user_id", str(user.hash_id))
         return response
+
+    async def logout(self, request):
+        user_hash = request.cookies.get("user_hash")
+        user = self.room_manager.users.get_user(user_hash)
+        if user is None:
+            logging.info(f"User with hash {user_hash} not found")
+            return web.json_response({"error": "User not found"}, status=404)
+        logging.info(f"Logging out user {user.username} with id {user.hash_id}")
+        user.logout()
+        return web.json_response({"success": True}, status=200)
 
 
 if __name__ == '__main__':
