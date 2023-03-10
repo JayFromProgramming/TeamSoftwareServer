@@ -1,5 +1,4 @@
-from GameAI.ChessAI import board
-# from GameAI.ChessAI.board import Board
+import chess
 from GameAI.ChessAI import pieces
 import numpy
 
@@ -62,8 +61,22 @@ class Heuristics:
         [-20, -10, -10, -5, -5, -10, -10, -20]
     ])
 
+    piece_values = {
+        chess.PAWN: 100,
+        chess.KNIGHT: 320,
+        chess.BISHOP: 330,
+        chess.ROOK: 500,
+        chess.QUEEN: 900,
+        chess.KING: 20000
+    }
+
     @staticmethod
     def evaluate(board):
+        """
+        Evaluates the board
+        :param board:
+        :return:
+        """
         material = Heuristics.get_material_score(board)
 
         pawns = Heuristics.get_piece_position_score(board, pieces.Pawn.PIECE_TYPE, Heuristics.PAWN_TABLE)
@@ -78,15 +91,15 @@ class Heuristics:
     # A piece type can for example be: pieces.Pawn.PIECE_TYPE.
     # The table is the 2d numpy array used for the scoring. Example: Heuristics.PAWN_TABLE
     @staticmethod
-    def get_piece_position_score(chess_board, piece_type, table):
+    def get_piece_position_score(chess_board: chess.Board, piece_type, table):
         white = 0
         black = 0
         for x in range(8):
             for y in range(8):
-                piece = chess_board.chesspieces[x][y]
-                if (piece != 0):
-                    if (piece.piece_type == piece_type):
-                        if (piece.color == pieces.Piece.WHITE):
+                piece = chess_board.piece_at(chess.square(x, y))
+                if piece:
+                    if piece.piece_type == piece_type:
+                        if piece.color == chess.WHITE:
                             white += table[x][y]
                         else:
                             black += table[7 - x][y]
@@ -94,65 +107,78 @@ class Heuristics:
         return white - black
 
     @staticmethod
-    def get_material_score(chess_board):
+    def get_material_score(chess_board: chess.Board):
+        """
+        Returns the score for the material on the board.
+        :param chess_board:
+        :return:
+        """
         white = 0
         black = 0
         for x in range(8):
             for y in range(8):
-                piece = chess_board.chesspieces[x][y]
-                if (piece != 0):
-                    if (piece.color == pieces.Piece.WHITE):
-                        white += piece.value
+                piece = chess_board.piece_at(chess.square(x, y))
+                if piece:
+                    if piece.color == chess.WHITE:
+                        white += Heuristics.piece_values[piece.piece_type]
                     else:
-                        black += piece.value
+                        black += Heuristics.piece_values[piece.piece_type]
 
         return white - black
 
 
 class AI:
+
     INFINITE = 10000000
 
     @staticmethod
-    def get_ai_move(chessboard, invalid_moves):
+    def get_all_possible_moves(board: chess.Board, color: chess.Color):
+        moves = []
+        for move in board.legal_moves:
+            board.push(move)
+            moves.append(move)
+            board.pop()
+        return moves
+
+    @staticmethod
+    def get_ai_move(chessboard: chess.Board, invalid_moves):
         best_move = 0
         best_score = AI.INFINITE
-        for move in chessboard.get_possible_moves(pieces.Piece.BLACK):
-            if (AI.is_invalid_move(move, invalid_moves)):
+        for move in AI.get_all_possible_moves(chessboard, chess.BLACK):
+            if move in invalid_moves:
                 continue
 
-            copy = board.Board.clone(chessboard)
-            copy.perform_move(move)
+            copy = chessboard.copy()
+            copy.push(move)
 
             score = AI.alphabeta(copy, 2, -AI.INFINITE, AI.INFINITE, True)
-            if (score < best_score):
+            if score < best_score:
                 best_score = score
                 best_move = move
 
         # Checkmate.
-        if (best_move == 0):
+        if best_move == 0:
             return 0
 
-        copy = board.Board.clone(chessboard)
-        copy.perform_move(best_move)
-        if (copy.is_check(pieces.Piece.BLACK)):
-            invalid_moves.append(best_move)
-            return AI.get_ai_move(chessboard, invalid_moves)
-
+        copy = chessboard.copy()
+        copy.push(best_move)
+        if copy.is_checkmate():
+            return 0
         return best_move
 
     @staticmethod
     def is_invalid_move(move, invalid_moves):
         for invalid_move in invalid_moves:
-            if (invalid_move.equals(move)):
+            if invalid_move.equals(move):
                 return True
         return False
 
     @staticmethod
     def minimax(board, depth, maximizing):
-        if (depth == 0):
+        if depth == 0:
             return Heuristics.evaluate(board)
 
-        if (maximizing):
+        if maximizing:
             best_score = -AI.INFINITE
             for move in board.get_possible_moves(pieces.Piece.WHITE):
                 copy = board.Board.clone(board)
@@ -174,29 +200,38 @@ class AI:
             return best_score
 
     @staticmethod
-    def alphabeta(chessboard, depth, a, b, maximizing):
-        if (depth == 0):
-            return Heuristics.evaluate(chessboard)
+    def alphabeta(chessboard: chess.Board, depth, a, b, maximizing):
+        """
+        Alpha beta pruning
+        :param chessboard: The chessboard
+        :param depth:  The depth of the search
+        :param a:   The alpha value
+        :param b:   The beta value
+        :param maximizing: True if maximizing, false if minimizing
+        :return:   The score
+        """
+        if depth == 0:  # If we have reached the end of the search
+            return Heuristics.evaluate(chessboard)  # Return the score
 
-        if (maximizing):
+        if maximizing:  # If we are maximizing
             best_score = -AI.INFINITE
-            for move in chessboard.get_possible_moves(pieces.Piece.WHITE):
-                copy = board.Board.clone(chessboard)
-                copy.perform_move(move)
+            for move in chessboard.legal_moves:  # For each move
+                copy = chessboard.copy()
+                copy.push(move)  # Perform the move
 
                 best_score = max(best_score, AI.alphabeta(copy, depth - 1, a, b, False))
                 a = max(a, best_score)
-                if (b <= a):
+                if b <= a:  # If beta is less than or equal to alpha, we can prune
                     break
             return best_score
         else:
             best_score = AI.INFINITE
-            for move in chessboard.get_possible_moves(pieces.Piece.BLACK):
-                copy = board.Board.clone(chessboard)
-                copy.perform_move(move)
+            for move in chessboard.legal_moves:
+                copy = chessboard.copy()
+                copy.push(move)
 
                 best_score = min(best_score, AI.alphabeta(copy, depth - 1, a, b, True))
                 b = min(b, best_score)
-                if (b <= a):
+                if b <= a:
                     break
             return best_score

@@ -178,9 +178,9 @@ class Chess(BaseRoom):
         while not self.game_over:
             try:
                 if self.board.turn == chess.BLACK:
-                    self.last_move = self.board.peek()
-                    self.users[1].update_player_move(self.board.peek())
-                    ai_move = self.users[1].get_ai_move()
+                    # self.last_move = self.board.peek()
+                    # self.users[1].update_player_move(self.board.peek())
+                    ai_move = self.users[1].get_ai_move(self.board)
                     logging.info(f"AI move: {ai_move}")
                     self.post_move(self.users[1], ai_move)
             except Exception as e:
@@ -194,7 +194,7 @@ class Chess(BaseRoom):
                         player.room_updated = True
             else:
                 ai_exceptions = 0
-            time.sleep(1)
+            time.sleep(random.uniform(0.5, 2.5))  # Sleep for a random amount of time to make it seem more human
 
     def check_if_capture(self, move):
         """

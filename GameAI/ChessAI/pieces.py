@@ -1,8 +1,8 @@
 from GameAI.ChessAI import ai
 from GameAI.ChessAI.move import Move
 
-class Piece():
 
+class Piece():
     WHITE = "W"
     BLACK = "B"
 
@@ -13,8 +13,6 @@ class Piece():
         self.piece_type = piece_type
         self.value = value
 
-
-
     # Returns all diagonal moves for this piece. This should therefore only
     # be used by the Bishop and Queen since they are the only pieces that can
     # move diagonally.
@@ -22,38 +20,38 @@ class Piece():
         moves = []
 
         for i in range(1, 8):
-            if (not board.in_bounds(self.x+i, self.y+i)):
+            if (not board.in_bounds(self.x + i, self.y + i)):
                 break
 
-            piece = board.get_piece(self.x+i, self.y+i)
-            moves.append(self.get_move(board, self.x+i, self.y+i))
+            piece = board.get_piece(self.x + i, self.y + i)
+            moves.append(self.get_move(board, self.x + i, self.y + i))
             if (piece != 0):
                 break
 
         for i in range(1, 8):
-            if (not board.in_bounds(self.x+i, self.y-i)):
+            if (not board.in_bounds(self.x + i, self.y - i)):
                 break
 
-            piece = board.get_piece(self.x+i, self.y-i)
-            moves.append(self.get_move(board, self.x+i, self.y-i))
+            piece = board.get_piece(self.x + i, self.y - i)
+            moves.append(self.get_move(board, self.x + i, self.y - i))
             if (piece != 0):
                 break
 
         for i in range(1, 8):
-            if (not board.in_bounds(self.x-i, self.y-i)):
+            if (not board.in_bounds(self.x - i, self.y - i)):
                 break
 
-            piece = board.get_piece(self.x-i, self.y-i)
-            moves.append(self.get_move(board, self.x-i, self.y-i))
+            piece = board.get_piece(self.x - i, self.y - i)
+            moves.append(self.get_move(board, self.x - i, self.y - i))
             if (piece != 0):
                 break
 
         for i in range(1, 8):
-            if (not board.in_bounds(self.x-i, self.y+i)):
+            if (not board.in_bounds(self.x - i, self.y + i)):
                 break
 
-            piece = board.get_piece(self.x-i, self.y+i)
-            moves.append(self.get_move(board, self.x-i, self.y+i))
+            piece = board.get_piece(self.x - i, self.y + i)
+            moves.append(self.get_move(board, self.x - i, self.y + i))
             if (piece != 0):
                 break
 
@@ -68,7 +66,7 @@ class Piece():
         # Moves to the right of the piece.
         for i in range(1, 8 - self.x):
             piece = board.get_piece(self.x + i, self.y)
-            moves.append(self.get_move(board, self.x+i, self.y))
+            moves.append(self.get_move(board, self.x + i, self.y))
 
             if (piece != 0):
                 break
@@ -76,21 +74,21 @@ class Piece():
         # Moves to the left of the piece.
         for i in range(1, self.x + 1):
             piece = board.get_piece(self.x - i, self.y)
-            moves.append(self.get_move(board, self.x-i, self.y))
+            moves.append(self.get_move(board, self.x - i, self.y))
             if (piece != 0):
                 break
 
         # Downward moves.
         for i in range(1, 8 - self.y):
             piece = board.get_piece(self.x, self.y + i)
-            moves.append(self.get_move(board, self.x, self.y+i))
+            moves.append(self.get_move(board, self.x, self.y + i))
             if (piece != 0):
                 break
 
         # Upward moves.
         for i in range(1, self.y + 1):
             piece = board.get_piece(self.x, self.y - i)
-            moves.append(self.get_move(board, self.x, self.y-i))
+            moves.append(self.get_move(board, self.x, self.y - i))
             if (piece != 0):
                 break
 
@@ -118,8 +116,8 @@ class Piece():
     def to_string(self):
         return self.color + self.piece_type + " "
 
-class Rook(Piece):
 
+class Rook(Piece):
     PIECE_TYPE = "R"
     VALUE = 500
 
@@ -134,7 +132,6 @@ class Rook(Piece):
 
 
 class Knight(Piece):
-
     PIECE_TYPE = "N"
     VALUE = 320
 
@@ -144,14 +141,14 @@ class Knight(Piece):
     def get_possible_moves(self, board):
         moves = []
 
-        moves.append(self.get_move(board, self.x+2, self.y+1))
-        moves.append(self.get_move(board, self.x-1, self.y+2))
-        moves.append(self.get_move(board, self.x-2, self.y+1))
-        moves.append(self.get_move(board, self.x+1, self.y-2))
-        moves.append(self.get_move(board, self.x+2, self.y-1))
-        moves.append(self.get_move(board, self.x+1, self.y+2))
-        moves.append(self.get_move(board, self.x-2, self.y-1))
-        moves.append(self.get_move(board, self.x-1, self.y-2))
+        moves.append(self.get_move(board, self.x + 2, self.y + 1))
+        moves.append(self.get_move(board, self.x - 1, self.y + 2))
+        moves.append(self.get_move(board, self.x - 2, self.y + 1))
+        moves.append(self.get_move(board, self.x + 1, self.y - 2))
+        moves.append(self.get_move(board, self.x + 2, self.y - 1))
+        moves.append(self.get_move(board, self.x + 1, self.y + 2))
+        moves.append(self.get_move(board, self.x - 2, self.y - 1))
+        moves.append(self.get_move(board, self.x - 1, self.y - 2))
 
         return self.remove_null_from_list(moves)
 
@@ -160,7 +157,6 @@ class Knight(Piece):
 
 
 class Bishop(Piece):
-
     PIECE_TYPE = "B"
     VALUE = 330
 
@@ -175,7 +171,6 @@ class Bishop(Piece):
 
 
 class Queen(Piece):
-
     PIECE_TYPE = "Q"
     VALUE = 900
 
@@ -192,7 +187,6 @@ class Queen(Piece):
 
 
 class King(Piece):
-
     PIECE_TYPE = "K"
     VALUE = 20000
 
@@ -202,14 +196,14 @@ class King(Piece):
     def get_possible_moves(self, board):
         moves = []
 
-        moves.append(self.get_move(board, self.x+1, self.y))
-        moves.append(self.get_move(board, self.x+1, self.y+1))
-        moves.append(self.get_move(board, self.x, self.y+1))
-        moves.append(self.get_move(board, self.x-1, self.y+1))
-        moves.append(self.get_move(board, self.x-1, self.y))
-        moves.append(self.get_move(board, self.x-1, self.y-1))
-        moves.append(self.get_move(board, self.x, self.y-1))
-        moves.append(self.get_move(board, self.x+1, self.y-1))
+        moves.append(self.get_move(board, self.x + 1, self.y))
+        moves.append(self.get_move(board, self.x + 1, self.y + 1))
+        moves.append(self.get_move(board, self.x, self.y + 1))
+        moves.append(self.get_move(board, self.x - 1, self.y + 1))
+        moves.append(self.get_move(board, self.x - 1, self.y))
+        moves.append(self.get_move(board, self.x - 1, self.y - 1))
+        moves.append(self.get_move(board, self.x, self.y - 1))
+        moves.append(self.get_move(board, self.x + 1, self.y - 1))
 
         moves.append(self.get_castle_kingside_move(board))
         moves.append(self.get_castle_queenside_move(board))
@@ -219,57 +213,56 @@ class King(Piece):
     # Only checks for castle kingside
     def get_castle_kingside_move(self, board):
         # Are we looking at a valid rook
-        piece_in_corner = board.get_piece(self.x+3, self.y)
+        piece_in_corner = board.get_piece(self.x + 3, self.y)
         if (piece_in_corner == 0 or piece_in_corner.piece_type != Rook.PIECE_TYPE):
             return 0
 
         # If the rook in the corner is not our color we cannot castle (duh).
         if (piece_in_corner.color != self.color):
             return 0
-        
+
         # If the king has moved, we cannot castle
         if (self.color == Piece.WHITE and board.white_king_moved):
             return 0
-        
+
         if (self.color == Piece.BLACK and board.black_king_moved):
             return 0
 
         # If there are pieces in between the king and rook we cannot castle
-        if (board.get_piece(self.x+1, self.y) != 0 or board.get_piece(self.x+2, self.y) != 0):
+        if (board.get_piece(self.x + 1, self.y) != 0 or board.get_piece(self.x + 2, self.y) != 0):
             return 0
-        
-        return Move(self.x, self.y, self.x+2, self.y)
+
+        return Move(self.x, self.y, self.x + 2, self.y)
 
     def get_castle_queenside_move(self, board):
         # Are we looking at a valid rook
-        piece_in_corner = board.get_piece(self.x-4, self.y)
+        piece_in_corner = board.get_piece(self.x - 4, self.y)
         if (piece_in_corner == 0 or piece_in_corner.piece_type != Rook.PIECE_TYPE):
             return 0
 
         # If the rook in the corner is not our color we cannot castle (duh).
         if (piece_in_corner.color != self.color):
             return 0
-        
+
         # If the king has moved, we cannot castle
         if (self.color == Piece.WHITE and board.white_king_moved):
             return 0
-        
+
         if (self.color == Piece.BLACK and board.black_king_moved):
             return 0
 
         # If there are pieces in between the king and rook we cannot castle
-        if (board.get_piece(self.x-1, self.y) != 0 or board.get_piece(self.x-2, self.y) != 0 or board.get_piece(self.x-3, self.y) != 0):
+        if (board.get_piece(self.x - 1, self.y) != 0 or board.get_piece(self.x - 2, self.y) != 0 or board.get_piece(
+                self.x - 3, self.y) != 0):
             return 0
-        
-        return Move(self.x, self.y, self.x-2, self.y)
 
+        return Move(self.x, self.y, self.x - 2, self.y)
 
     def clone(self):
         return King(self.x, self.y, self.color)
 
 
 class Pawn(Piece):
-
     PIECE_TYPE = "P"
     VALUE = 100
 
@@ -291,11 +284,12 @@ class Pawn(Piece):
             direction = 1
 
         # The general 1 step forward move.
-        if (board.get_piece(self.x, self.y+direction) == 0):
+        if (board.get_piece(self.x, self.y + direction) == 0):
             moves.append(self.get_move(board, self.x, self.y + direction))
 
         # The Pawn can take 2 steps as the first move.
-        if (self.is_starting_position() and board.get_piece(self.x, self.y+ direction) == 0 and board.get_piece(self.x, self.y + direction*2) == 0):
+        if (self.is_starting_position() and board.get_piece(self.x, self.y + direction) == 0 and board.get_piece(self.x,
+                                                                                                                 self.y + direction * 2) == 0):
             moves.append(self.get_move(board, self.x, self.y + direction * 2))
 
         # Eating pieces.
