@@ -2,6 +2,7 @@ import datetime
 import random
 import threading
 import time
+import traceback
 
 import chess
 import chess.variant
@@ -9,7 +10,7 @@ import chess.variant
 from GameManagers.base_room import BaseRoom
 from loguru import logger as logging
 
-from user import User
+from GameAI import ChessAI
 
 
 class Chess(BaseRoom):
@@ -167,6 +168,34 @@ class Chess(BaseRoom):
                 self.move_timers[1] -= datetime.timedelta(seconds=1) if self.board.turn == chess.BLACK else datetime.timedelta()
             time.sleep(1)
 
+    def chess_ai_thread(self):
+        """
+        This function is called when a chess AI is playing in the room
+        :note: The chess AI is always black aka user[1]
+        :return:
+        """
+        ai_exceptions = 0
+        while not self.game_over:
+            try:
+                if self.board.turn == chess.BLACK:
+                    self.last_move = self.board.peek()
+                    self.users[1].update_player_move(self.board.peek())
+                    ai_move = self.users[1].get_ai_move()
+                    logging.info(f"AI move: {ai_move}")
+                    self.post_move(self.users[1], ai_move)
+            except Exception as e:
+                logging.exception(e)
+                ai_exceptions += 1
+                if ai_exceptions >= 5:
+                    self.state = "[red]AI Error[/red]"
+                    self.game_over = True
+                    self.users[1].online = False
+                    for player in self.users + self.spectators:
+                        player.room_updated = True
+            else:
+                ai_exceptions = 0
+            time.sleep(1)
+
     def check_if_capture(self, move):
         """
         Checks if the move will capture a piece and adds it to the taken pieces list
@@ -174,6 +203,9 @@ class Chess(BaseRoom):
         :return:
         """
         move = chess.Move.from_uci(move)
+        # Check if the move is valid
+        if move not in self.board.legal_moves:
+            return False
         if self.board.is_capture(move):
             # print(f"Move {move.uci()} is a capture")
             piece = self.board.piece_at(move.to_square)
@@ -190,11 +222,12 @@ class Chess(BaseRoom):
         for player in self.users + self.spectators:
             player.room_updated = True
 
-        if len(self.users) < 2:
-            return {"error": "not_enough_players"}
+        # if len(self.users) < 2:
+        #     return {"error": "not_enough_players"}
 
         if user.user_id != self.current_player.user_id:
-            logging.info(f"User {user.username} tried to move out of turn, current player is {self.current_player.username}")
+            logging.info(f"User {user.username} tried to move out of turn, current player is "
+                         f"{self.current_player.username}")
             return {"error": "out_of_turn"}
 
         try:
@@ -207,7 +240,7 @@ class Chess(BaseRoom):
             logging.info(f"User {user.username} tried to make an invalid move")
             return {"error": "invalid_move"}
         except Exception as e:
-            logging.info(f"User {user.username} cause an unknown error: {e}")
+            logging.info(f"User {user.username} cause an unknown error: {e}{traceback.format_exc()}")
             return {"error": "unknown_error"}
 
         self.last_move = move
@@ -221,11 +254,17 @@ class Chess(BaseRoom):
         if len(self.users) == 2:
             self.current_player = self.users[1] if self.current_player == self.users[0] else self.users[0]
         else:
-            self.current_player = self.users[0]
+            # Add an AI player
+            logging.info(f"Adding an AI player to room {self.room_id}")
+            self.users.append(ChessAI.ChessAI(self.board, self))
+            self.current_player = self.users[1]
+            threading.Thread(target=self.chess_ai_thread, daemon=True).start()
 
         if self.check_win_conditions():
             self.game_over = True
             return {"result": "success"}
+
+        time.sleep(1)
 
         return {"result": "success"}
 

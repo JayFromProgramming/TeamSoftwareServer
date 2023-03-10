@@ -16,6 +16,7 @@ for file in os.listdir("GameManagers"):
             exec(f"from GameManagers.{file[:-3]} import *")
         except Exception as e:
             logging.info(f"Failed to load {file}: {e}")
+            print(f"Failed to load {file}: {e}")
 logging.info(f"Loaded {len(BaseRoom.__subclasses__())} room modules")
 
 
@@ -230,7 +231,8 @@ class RoomManager:
         try:
             result = room.post_move(user, move)
             if 'error' in result:
-                return web.json_response(result, status=400)
+                logging.warning(f"Move result returned error: {result}")
+                return web.json_response(result, status=501)
             else:
                 return web.json_response(result, status=200)
         except Exception as e:
