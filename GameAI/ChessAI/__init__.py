@@ -6,7 +6,6 @@ Modified from the original code by Dirk Hoekstra (https://github.com/Dirk94/Ches
 import time
 
 from GameAI.ChessAI import ai
-from GameAI.ChessAI import pieces
 
 import chess
 
@@ -35,7 +34,7 @@ class ChessAI:
         move = ai.AI.get_ai_move(board, self.last_ai_moves)
         # To prevent the AI from just moving the same piece back and forth we will check if the move is the same
         # as the last 2 moves. If it is we will get a new move.
-        if move == 0:
+        if move is None:
             # If the AI wasn't able to find a move with the move restriction we will try again without the restriction.
             move = ai.AI.get_ai_move(board, [])
         self.last_ai_moves.append(move)

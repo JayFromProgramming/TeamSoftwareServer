@@ -1,7 +1,6 @@
 import random
 
 import chess
-from GameAI.ChessAI import pieces
 import numpy
 
 
@@ -15,7 +14,7 @@ class Heuristics:
         [0, 0, 0, 20, 20, 0, 0, 0],
         [5, 5, 10, 25, 25, 10, 5, 5],
         [10, 10, 20, 30, 30, 20, 10, 10],
-        [50,  50,  50,  50,  50,  50,  50,  50],
+        [50, 50, 50, 50, 50, 50, 50, 50],
         [100, 100, 100, 100, 100, 100, 100, 100]
     ])
 
@@ -81,11 +80,11 @@ class Heuristics:
         """
         material = Heuristics.get_material_score(board)
 
-        pawns = Heuristics.get_piece_position_score(board, pieces.Pawn.PIECE_TYPE, Heuristics.PAWN_TABLE)
-        knights = Heuristics.get_piece_position_score(board, pieces.Knight.PIECE_TYPE, Heuristics.KNIGHT_TABLE)
-        bishops = Heuristics.get_piece_position_score(board, pieces.Bishop.PIECE_TYPE, Heuristics.BISHOP_TABLE)
-        rooks = Heuristics.get_piece_position_score(board, pieces.Rook.PIECE_TYPE, Heuristics.ROOK_TABLE)
-        queens = Heuristics.get_piece_position_score(board, pieces.Queen.PIECE_TYPE, Heuristics.QUEEN_TABLE)
+        pawns = Heuristics.get_piece_position_score(board, chess.PAWN, Heuristics.PAWN_TABLE)
+        knights = Heuristics.get_piece_position_score(board, chess.KNIGHT, Heuristics.KNIGHT_TABLE)
+        bishops = Heuristics.get_piece_position_score(board, chess.BISHOP, Heuristics.BISHOP_TABLE)
+        rooks = Heuristics.get_piece_position_score(board, chess.ROOK, Heuristics.ROOK_TABLE)
+        queens = Heuristics.get_piece_position_score(board, chess.QUEEN, Heuristics.QUEEN_TABLE)
 
         return material + pawns + knights + bishops + rooks + queens
 
@@ -130,7 +129,6 @@ class Heuristics:
 
 
 class AI:
-
     INFINITE = 10000000
 
     @staticmethod
@@ -150,7 +148,7 @@ class AI:
         :param invalid_moves: The moves that are not allowed, used to prevent the AI from repeating the same move.
         :return:
         """
-        best_move = 0
+        best_move = []
         best_score = AI.INFINITE
         for move in AI.get_all_possible_moves(chessboard, chess.BLACK):
             if move in invalid_moves:
@@ -162,20 +160,13 @@ class AI:
             score = AI.alphabeta(copy, 2, -AI.INFINITE, AI.INFINITE, True)
             if score < best_score:
                 best_score = score
-                best_move = move
+                best_move = [move]
             elif score == best_score:  # If the score is the same, choose a random move.
-                if random.randint(0, 1) == 1:
-                    best_move = move   # This is to reduce the predictability of the AI.
+                best_move.append(move)
 
-        # Checkmate.
-        if best_move == 0:
-            return 0
-
-        copy = chessboard.copy()
-        copy.push(best_move)
-        if copy.is_checkmate():
-            return 0
-        return best_move
+        if len(best_move) == 0:
+            return None
+        return random.choice(best_move)
 
     @staticmethod
     def is_invalid_move(move, invalid_moves):
