@@ -1,8 +1,11 @@
+import random
+import threading
+import time
+
 from GameManagers.base_room import BaseRoom
-import logging
+from loguru import logger as logging
 
-logging = logging.getLogger(__name__)
-
+from GameAI.BattleShipAI import BattleShipAI
 
 class BattleShip(BaseRoom):
     playable = True
@@ -140,12 +143,14 @@ class BattleShip(BaseRoom):
         self.spectator_fog_of_war = starting_config[
             "spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else False
         self.spectator_fog_of_war = False
+        self.ai_enable = starting_config["ai_enable"] if "ai_enable" in starting_config else True
 
         self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
 
         self.both_ready = False
         self.current_player = self.users[0] if len(self.users) > 0 else None
         self.winner = None
+        self.game_over = False
 
     def database_init(self):
         pass
@@ -216,7 +221,34 @@ class BattleShip(BaseRoom):
             return self.boards[self.users.index(user)]
         return None
 
+    def ai_thread(self):
+        ai_exceptions = 0
+        while not self.game_over:
+            try:
+                if isinstance(self.current_player, BattleShipAI):
+                    # logging.info(self.users[1])
+                    move = self.current_player.get_ai_move(self.boards[0])
+                    logging.info(move)
+                    self.post_move(self.users[1], move)
+            except Exception as e:
+                ai_exceptions += 1
+                logging.exception(e)
+                if ai_exceptions > 5:
+                    self.game_over = True
+                    self.winner = self.users[0]
+                    self.users[1].online = False
+                    for player in self.users + self.spectators:
+                        player.room_updated = True
+                    self.state = "[red]AI Error[/red]"
+                    break
+            time.sleep(random.uniform(0.5, 1.5))
+
     def post_move(self, user, move):
+
+        if len(self.users) == 1 and self.ai_enable:
+            self.users.append(BattleShipAI(self.boards[1], self))
+            self.current_player = self.users[0]
+            threading.Thread(target=self.ai_thread, daemon=True).start()
 
         for player in self.users + self.spectators:
             player.room_updated = True
@@ -227,17 +259,18 @@ class BattleShip(BaseRoom):
                 return {"error": "No placement data"}
             for ship in move["placed_ships"]:
                 ship_obj = self.boards[self.users.index(user)].get_ship(ship["size"])
-                if not self.boards[self.users.index(user)].place_ship(ship_obj, ship["x"], ship["y"], ship["direction"]):
+                if not self.boards[self.users.index(user)].place_ship(ship_obj, ship["x"], ship["y"],
+                                                                      ship["direction"]):
                     return {"error": "Invalid ship placement."}
                 logging.info(f"User {user.username} placed a ship of size {ship['size']} at ({ship['x']}, {ship['y']})"
-                                f" facing {ship['direction']}")
+                             f" facing {ship['direction']}")
             if [board.ready() for board in self.boards] == [True, True]:
                 self.state = "In Progress"
                 self.both_ready = True
                 self.current_player = self.users[0]
                 logging.info(f"{self.room_id} both players ready, starting game")
         else:
-            if user.hash_id != self.current_player.hash_id:
+            if user.user_id != self.current_player.user_id:
                 logging.info(f"{user.username} tried to make a move out of turn.")
                 return {"error": "It is not your turn."}
 
@@ -246,10 +279,16 @@ class BattleShip(BaseRoom):
             else:
                 self.current_player = self.users[0]
 
+            # Check if the move has already been made
+            if self.get_board(self.current_player).board[move["x"]][move["y"]] != 0:
+                self.current_player = self.users[1] if self.current_player == self.users[0] else self.users[0]
+                return {"error": "You have already made this move."}
+
             if self.get_board(self.current_player).is_hit(move["x"], move["y"]):
                 logging.info(f"{user.username} hit ({move['x']}, {move['y']})")
                 if self.get_board(self.current_player).all_sunk():
                     self.state = "Game Over"
+                    self.game_over = True
                     self.winner = user
                     logging.info(f"{user.username} won {self.room_id}")
 

@@ -30,7 +30,6 @@ class ChessAI:
         }
 
     def get_ai_move(self, board: chess.Board) -> str:
-        start_time = time.time()
         move = ai.AI.get_ai_move(board, self.last_ai_moves)
         # To prevent the AI from just moving the same piece back and forth we will check if the move is the same
         # as the last 2 moves. If it is we will get a new move.

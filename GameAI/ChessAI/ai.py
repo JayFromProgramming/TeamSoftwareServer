@@ -175,31 +175,31 @@ class AI:
                 return True
         return False
 
-    @staticmethod
-    def minimax(board, depth, maximizing):
-        if depth == 0:
-            return Heuristics.evaluate(board)
-
-        if maximizing:
-            best_score = -AI.INFINITE
-            for move in board.get_possible_moves(pieces.Piece.WHITE):
-                copy = board.Board.clone(board)
-                copy.perform_move(move)
-
-                score = AI.minimax(copy, depth - 1, False)
-                best_score = max(best_score, score)
-
-            return best_score
-        else:
-            best_score = AI.INFINITE
-            for move in board.get_possible_moves(pieces.Piece.BLACK):
-                copy = board.Board.clone(board)
-                copy.perform_move(move)
-
-                score = AI.minimax(copy, depth - 1, True)
-                best_score = min(best_score, score)
-
-            return best_score
+    # @staticmethod
+    # def minimax(board, depth, maximizing):
+    #     if depth == 0:
+    #         return Heuristics.evaluate(board)
+    #
+    #     if maximizing:
+    #         best_score = -AI.INFINITE
+    #         for move in board.get_possible_moves():
+    #             copy = board.Board.clone(board)
+    #             copy.perform_move(move)
+    #
+    #             score = AI.minimax(copy, depth - 1, False)
+    #             best_score = max(best_score, score)
+    #
+    #         return best_score
+    #     else:
+    #         best_score = AI.INFINITE
+    #         for move in board.get_possible_moves():
+    #             copy = board.Board.clone(board)
+    #             copy.perform_move(move)
+    #
+    #             score = AI.minimax(copy, depth - 1, True)
+    #             best_score = min(best_score, score)
+    #
+    #         return best_score
 
     @staticmethod
     def alphabeta(chessboard: chess.Board, depth, a, b, maximizing):
