@@ -180,8 +180,9 @@ class Chess(BaseRoom):
                 if self.board.turn == chess.BLACK:
                     # self.last_move = self.board.peek()
                     # self.users[1].update_player_move(self.board.peek())
+                    start_time = time.time()
                     ai_move = self.users[1].get_ai_move(self.board)
-                    logging.info(f"AI move: {ai_move}")
+                    logging.info(f"AI move: {ai_move} in {round(time.time() - start_time, 2)} seconds")
                     self.post_move(self.users[1], ai_move)
             except Exception as e:
                 logging.exception(e)

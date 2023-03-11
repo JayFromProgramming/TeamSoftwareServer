@@ -1,3 +1,5 @@
+import random
+
 import chess
 from GameAI.ChessAI import pieces
 import numpy
@@ -13,8 +15,8 @@ class Heuristics:
         [0, 0, 0, 20, 20, 0, 0, 0],
         [5, 5, 10, 25, 25, 10, 5, 5],
         [10, 10, 20, 30, 30, 20, 10, 10],
-        [50, 50, 50, 50, 50, 50, 50, 50],
-        [0, 0, 0, 0, 0, 0, 0, 0]
+        [50,  50,  50,  50,  50,  50,  50,  50],
+        [100, 100, 100, 100, 100, 100, 100, 100]
     ])
 
     KNIGHT_TABLE = numpy.array([
@@ -40,7 +42,7 @@ class Heuristics:
     ])
 
     ROOK_TABLE = numpy.array([
-        [0, 0, 0, 5, 5, 0, 0, 0],
+        [-10, -5, 0, 5, 5, 0, -5, -10],
         [-5, 0, 0, 0, 0, 0, 0, -5],
         [-5, 0, 0, 0, 0, 0, 0, -5],
         [-5, 0, 0, 0, 0, 0, 0, -5],
@@ -142,6 +144,12 @@ class AI:
 
     @staticmethod
     def get_ai_move(chessboard: chess.Board, invalid_moves):
+        """
+        Returns the best move for the AI.
+        :param chessboard:  The chessboard
+        :param invalid_moves: The moves that are not allowed, used to prevent the AI from repeating the same move.
+        :return:
+        """
         best_move = 0
         best_score = AI.INFINITE
         for move in AI.get_all_possible_moves(chessboard, chess.BLACK):
@@ -155,6 +163,9 @@ class AI:
             if score < best_score:
                 best_score = score
                 best_move = move
+            elif score == best_score:  # If the score is the same, choose a random move.
+                if random.randint(0, 1) == 1:
+                    best_move = move   # This is to reduce the predictability of the AI.
 
         # Checkmate.
         if best_move == 0:

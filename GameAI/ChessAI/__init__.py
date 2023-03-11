@@ -3,6 +3,8 @@ Modified from the original code by Dirk Hoekstra (https://github.com/Dirk94/Ches
 """
 
 # from GameAI.ChessAI import board
+import time
+
 from GameAI.ChessAI import ai
 from GameAI.ChessAI import pieces
 
@@ -19,6 +21,7 @@ class ChessAI:
         self.online = True
 
         self.current_room = current_room
+        self.last_ai_moves = []
 
     def encode(self):
         return {
@@ -27,35 +30,15 @@ class ChessAI:
             "online": self.online,
         }
 
-    # @staticmethod
-    # def convert_chess_move_to_board_move(chess_move: chess.Move):
-    #     from_x = chess_move.from_square % 8
-    #     from_y = chess_move.from_square // 8
-    #     to_x = chess_move.to_square % 8
-    #     to_y = chess_move.to_square // 8
-    #     # For some reason the board is upside down from the ai's perspective, so we need to rotate the board
-    #     from_y = 8 - from_y
-    #     to_y = 8 - to_y
-    #     return pieces.Move(from_x, from_y, to_x, to_y)
-    #
-    # @staticmethod
-    # def convert_board_move_to_chess_move(board_move: pieces.Move):
-    #     from_square = board_move.xfrom + board_move.yfrom * 8
-    #     to_square = board_move.xto + board_move.yto * 8
-    #     # We also need to rotate the board back
-    #     from_square = 63 - from_square
-    #     to_square = 63 - to_square
-    #     chess_move = chess.Move(from_square, to_square)
-    #     return chess_move
-
-    # def update_player_move(self, move: chess.Move):
-    #     move_obj = self.convert_chess_move_to_board_move(move)
-    #     try:
-    #         self.board.perform_move(move_obj)
-    #     except Exception as e:
-    #         print(self.board.to_string())
-    #         raise e
-
     def get_ai_move(self, board: chess.Board) -> str:
-        move = ai.AI.get_ai_move(board, [])
+        start_time = time.time()
+        move = ai.AI.get_ai_move(board, self.last_ai_moves)
+        # To prevent the AI from just moving the same piece back and forth we will check if the move is the same
+        # as the last 2 moves. If it is we will get a new move.
+        if move == 0:
+            # If the AI wasn't able to find a move with the move restriction we will try again without the restriction.
+            move = ai.AI.get_ai_move(board, [])
+        self.last_ai_moves.append(move)
+        if len(self.last_ai_moves) > 4:  # Only restrict a repeat of the last 4 moves.
+            self.last_ai_moves.pop(0)
         return move.uci()
