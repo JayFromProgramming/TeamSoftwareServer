@@ -163,7 +163,6 @@ class BattleShipAI:
         :param enemy_board: The enemy's board
         :return: The AI's next move
         """
-        print(self.debug())
         # Determine if the last shot hit a ship
         # Compare the state of the enemy's ships from the last turn to the current turn
         for ship in enemy_board.ships:
@@ -178,7 +177,6 @@ class BattleShipAI:
                     return self.get_random_shot(enemy_board)
 
         if self.last_shot is not None:
-            print(f"Value of last shot: {enemy_board.board[self.last_shot[0]][self.last_shot[1]]}")
             if enemy_board.board[self.last_shot[0]][self.last_shot[1]] == 1:
                 self.last_hit = self.last_shot
                 if not self.homing:
