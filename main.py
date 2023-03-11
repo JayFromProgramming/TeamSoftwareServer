@@ -72,17 +72,16 @@ def multicast_discovery(server_info, server_ip, server_port):
     # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP,
     #                 1)  # Allow multicast packets to loop back to local host
 
-    MCAST_GRP = socket.inet_aton("224.1.1.1")  # Set the multicast group
-
     # Bind to the port
     sock.bind(('', 5007))
     # Join the multicast group
 
-    host = socket.gethostbyname(socket.gethostname())
-    mreq = MCAST_GRP + socket.inet_aton(host)
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+    multicast_groups = ['224.0.0.255', '224.0.1.255', '224.0.255.255', '233.255.255.255']
+    for multicast_group in multicast_groups:
+        mreq = struct.pack("4sl", socket.inet_aton(multicast_group), socket.INADDR_ANY)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-    logging.info(f"Multicast discovery bound to MCAST_GRP 224.1.1.1 on port 5007")
+    logging.info(f"Listening for multicast packets on {multicast_groups}, port 5007")
 
     while True:
         try:
