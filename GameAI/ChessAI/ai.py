@@ -157,8 +157,9 @@ class AI:
             copy = chessboard.copy()
             copy.push(move)
 
+            # Calculate the value of this move
             score = AI.alphabeta(copy, 2, -AI.INFINITE, AI.INFINITE, True)
-            if score < best_score:
+            if score < best_score:  # If the score is better, choose this move.
                 best_score = score
                 best_move = [move]
             elif score == best_score:  # If the score is the same, choose a random move.
