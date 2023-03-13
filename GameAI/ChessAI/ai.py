@@ -156,7 +156,8 @@ class AI:
         self.best_move_score = 0
         self.total_optimal_moves = 0
         self.calculate_time = 0
-
+        self.total_legal_moves = 0
+        self.search_depth = 0
         self.color = color
 
     def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2, time_limit=60, skill=1):
@@ -170,14 +171,15 @@ class AI:
         :return:
         """
         best_move = []
-        best_score = AI.INFINITE
+        best_score = -AI.INFINITE
         start_time = time.time()
         self.total_moves_checked = 0
 
         # If the total number of legal moves is less than 10, then increase the depth by 1.
         if chessboard.legal_moves.count() < 10:
             depth += 1
-
+        self.search_depth = depth
+        self.total_legal_moves = chessboard.legal_moves.count()
         for move in chessboard.legal_moves:
             if move in invalid_moves:
                 continue
@@ -190,9 +192,9 @@ class AI:
 
             # Calculate the value of this move
             score = self.alphabeta(copy, depth, -AI.INFINITE, AI.INFINITE, True)
-            if depth % 2 == 0:
+            if depth % 2 != 0:  # If the depth is even then the score is inverted.
                 score = -score
-            if score < best_score:  # If the score is better, choose this move.
+            if score > best_score:  # If the score is better, choose this move.
                 best_score = score
                 best_move = [move]
             elif score == best_score:  # If the score is the same, choose a random move.

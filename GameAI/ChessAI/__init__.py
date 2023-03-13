@@ -12,9 +12,9 @@ import chess
 
 class ChessAI:
 
-    def __init__(self, room_board, current_room):
+    def __init__(self, room_board, current_room, color: chess.Color):
         self.room_board = room_board
-        self.ai = ai.AI()
+        self.ai = ai.AI(color)
 
         self.username = "ChessAI"
         self.user_id = -1
@@ -39,6 +39,8 @@ class ChessAI:
             f"AI Move Debug",
             f"Time: {self.ai.calculate_time}",
             f"MPS:  {self.ai.total_moves_checked / self.ai.calculate_time}",
+            f"Legal Moves:   {self.ai.total_legal_moves}",
+            f"Search Depth:  {self.ai.search_depth}",
             f"Checked Moves: {self.ai.total_moves_checked}",
             f"Optimal Moves: {self.ai.total_optimal_moves}",
             f"Move Score:    {self.ai.best_move_score}",
@@ -52,7 +54,7 @@ class ChessAI:
         if move is None:
             # If the AI wasn't able to find a move with the move restriction we will try again without the restriction.
             move = self.ai.get_ai_move(board, [])
-        self.last_ai_moves.append(move)
+        # self.last_ai_moves.append(move)
         if len(self.last_ai_moves) > 4:  # Only restrict a repeat of the last 4 moves.
             self.last_ai_moves.pop(0)
         return move.uci()

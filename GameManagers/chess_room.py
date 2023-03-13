@@ -259,7 +259,7 @@ class Chess(BaseRoom):
         else:
             # Add an AI player
             logging.info(f"Adding an AI player to room {self.room_id}")
-            self.users.append(ChessAI.ChessAI(self.board, self))
+            self.users.append(ChessAI.ChessAI(self.board, self, chess.BLACK))
             self.current_player = self.users[1]
             threading.Thread(target=self.chess_ai_thread, daemon=True).start()
 
