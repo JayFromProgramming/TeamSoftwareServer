@@ -1,4 +1,5 @@
 import random
+import time
 
 import chess
 import numpy
@@ -78,6 +79,13 @@ class Heuristics:
         :param board:
         :return:
         """
+
+        if board.is_checkmate():
+            if board.turn:
+                return -AI.INFINITE
+            else:
+                return AI.INFINITE
+
         material = Heuristics.get_material_score(board)
 
         pawns = Heuristics.get_piece_position_score(board, chess.PAWN, Heuristics.PAWN_TABLE)
@@ -131,34 +139,41 @@ class Heuristics:
 class AI:
     INFINITE = 10000000
 
-    @staticmethod
-    def get_all_possible_moves(board: chess.Board, color: chess.Color):
-        moves = []
-        for move in board.legal_moves:
-            board.push(move)
-            moves.append(move)
-            board.pop()
-        return moves
+    def __init__(self):
+        # These values are used to display debug information about the last move calculated.
+        self.total_moves_checked = 0
+        self.average_alpha_beta_time = 0
 
-    @staticmethod
-    def get_ai_move(chessboard: chess.Board, invalid_moves):
+    def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2, time_limit=60):
         """
         Returns the best move for the AI.
         :param chessboard:  The chessboard
         :param invalid_moves: The moves that are not allowed, used to prevent the AI from repeating the same move.
+        :param depth: The maximum depth to search.
+        :param time_limit: The maximum time to search.
         :return:
         """
         best_move = []
         best_score = AI.INFINITE
-        for move in AI.get_all_possible_moves(chessboard, chess.BLACK):
+        start_time = time.time()
+        self.total_moves_checked = 0
+
+        for move in chessboard.legal_moves:
             if move in invalid_moves:
                 continue
 
             copy = chessboard.copy()
             copy.push(move)
 
+            if time.time() - start_time > time_limit:
+                break
+
+            # Check if the move puts the enemy king in checkmate.
+            if copy.is_checkmate():
+                return move
+
             # Calculate the value of this move
-            score = AI.alphabeta(copy, 2, -AI.INFINITE, AI.INFINITE, True)
+            score = self.alphabeta(copy, depth, -AI.INFINITE, AI.INFINITE, True)
             if score < best_score:  # If the score is better, choose this move.
                 best_score = score
                 best_move = [move]
@@ -202,14 +217,13 @@ class AI:
     #
     #         return best_score
 
-    @staticmethod
-    def alphabeta(chessboard: chess.Board, depth, a, b, maximizing):
+    def alphabeta(self, chessboard: chess.Board, depth, a, b, maximizing):
         """
         Alpha beta pruning
         :param chessboard: The chessboard
-        :param depth:  The depth of the search
-        :param a:   The alpha value
-        :param b:   The beta value
+        :param depth:  The depth of the search (how many moves ahead)
+        :param a:   The alpha value (best score for the maximizing player)
+        :param b:   The beta value (best score for the minimizing player)
         :param maximizing: True if maximizing, false if minimizing
         :return:   The score
         """
@@ -219,10 +233,11 @@ class AI:
         if maximizing:  # If we are maximizing
             best_score = -AI.INFINITE
             for move in chessboard.legal_moves:  # For each move
+                self.total_moves_checked += 1
                 copy = chessboard.copy()
                 copy.push(move)  # Perform the move
 
-                best_score = max(best_score, AI.alphabeta(copy, depth - 1, a, b, False))
+                best_score = max(best_score, self.alphabeta(copy, depth - 1, a, b, False))
                 a = max(a, best_score)
                 if b <= a:  # If beta is less than or equal to alpha, we can prune
                     break
@@ -230,10 +245,11 @@ class AI:
         else:
             best_score = AI.INFINITE
             for move in chessboard.legal_moves:
+                self.total_moves_checked += 1
                 copy = chessboard.copy()
                 copy.push(move)
 
-                best_score = min(best_score, AI.alphabeta(copy, depth - 1, a, b, True))
+                best_score = min(best_score, self.alphabeta(copy, depth - 1, a, b, True))
                 b = min(b, best_score)
                 if b <= a:
                     break

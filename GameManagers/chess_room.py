@@ -182,7 +182,9 @@ class Chess(BaseRoom):
                     # self.users[1].update_player_move(self.board.peek())
                     start_time = time.time()
                     ai_move = self.users[1].get_ai_move(self.board)
-                    logging.info(f"AI move: {ai_move} in {round(time.time() - start_time, 2)} seconds")
+                    
+                    logging.info(f"AI move: {ai_move} in {round(time.time() - start_time, 2)} seconds, "
+                                 f"analyzed {self.users[1].get_last_move_debug()} legal moves")
                     self.post_move(self.users[1], ai_move)
             except Exception as e:
                 logging.exception(e)
