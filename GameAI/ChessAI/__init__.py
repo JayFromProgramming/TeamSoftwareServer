@@ -30,8 +30,20 @@ class ChessAI:
             "online": self.online,
         }
 
-    def get_last_move_debug(self):
-        return self.ai.total_moves_checked
+    def ai_move_debug(self):
+        """
+        Returns a string of debug information about the AI's move.
+        :return:
+        """
+        text = [
+            f"AI Move Debug",
+            f"Time: {self.ai.calculate_time}",
+            f"MPS:  {self.ai.total_moves_checked / self.ai.calculate_time}",
+            f"Checked Moves: {self.ai.total_moves_checked}",
+            f"Optimal Moves: {self.ai.total_optimal_moves}",
+            f"Move Score:    {self.ai.best_move_score}",
+        ]
+        return "\n".join(text)
 
     def get_ai_move(self, board: chess.Board) -> str:
         move = self.ai.get_ai_move(board, self.last_ai_moves)
@@ -39,7 +51,7 @@ class ChessAI:
         # as the last 2 moves. If it is we will get a new move.
         if move is None:
             # If the AI wasn't able to find a move with the move restriction we will try again without the restriction.
-            move = self.ai.get_ai_move(board)
+            move = self.ai.get_ai_move(board, [])
         self.last_ai_moves.append(move)
         if len(self.last_ai_moves) > 4:  # Only restrict a repeat of the last 4 moves.
             self.last_ai_moves.pop(0)

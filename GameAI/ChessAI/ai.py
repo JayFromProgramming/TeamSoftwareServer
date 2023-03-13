@@ -69,24 +69,32 @@ class Heuristics:
         chess.BISHOP: 330,
         chess.ROOK: 500,
         chess.QUEEN: 900,
-        chess.KING: 20000
+        chess.KING: 1200
     }
 
     @staticmethod
-    def evaluate(board):
+    def evaluate(board, ai_color):
         """
         Evaluates the board
         :param board:
+        :param ai_color: The color of the AI
         :return:
         """
 
         if board.is_checkmate():
-            if board.turn:
-                return -AI.INFINITE
+            if board.turn == ai_color:
+                return -AI.INFINITE  # Prioritize not getting checkmated above all else
             else:
-                return AI.INFINITE
+                return AI.INFINITE  # Prioritize checkmate above all else
 
-        material = Heuristics.get_material_score(board)
+        # Preform check evaluation
+        if board.is_check():
+            if board.turn == ai_color:  # If this board state has the AI in check
+                return -AI.INFINITE  # Don't make this move
+            else:  # If this board state has the opponent in check
+                return 99
+
+        material = Heuristics.get_material_score(board, ai_color)
 
         pawns = Heuristics.get_piece_position_score(board, chess.PAWN, Heuristics.PAWN_TABLE)
         knights = Heuristics.get_piece_position_score(board, chess.KNIGHT, Heuristics.KNIGHT_TABLE)
@@ -116,10 +124,11 @@ class Heuristics:
         return white - black
 
     @staticmethod
-    def get_material_score(chess_board: chess.Board):
+    def get_material_score(chess_board: chess.Board, ai_color):
         """
         Returns the score for the material on the board.
         :param chess_board:
+        :param ai_color: The color of the AI, used to determine which pieces are positive and negative.
         :return:
         """
         white = 0
@@ -132,31 +141,42 @@ class Heuristics:
                         white += Heuristics.piece_values[piece.piece_type]
                     else:
                         black += Heuristics.piece_values[piece.piece_type]
-
-        return white - black
+        if ai_color == chess.WHITE:
+            return white - black
+        else:
+            return black - white
 
 
 class AI:
     INFINITE = 10000000
 
-    def __init__(self):
+    def __init__(self, color):
         # These values are used to display debug information about the last move calculated.
         self.total_moves_checked = 0
-        self.average_alpha_beta_time = 0
+        self.best_move_score = 0
+        self.total_optimal_moves = 0
+        self.calculate_time = 0
 
-    def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2, time_limit=60):
+        self.color = color
+
+    def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2, time_limit=60, skill=1):
         """
         Returns the best move for the AI.
         :param chessboard:  The chessboard
         :param invalid_moves: The moves that are not allowed, used to prevent the AI from repeating the same move.
         :param depth: The maximum depth to search.
         :param time_limit: The maximum time to search.
+        :param skill: The skill of the AI. 1 is the full skill, 0 is zero skill.
         :return:
         """
         best_move = []
         best_score = AI.INFINITE
         start_time = time.time()
         self.total_moves_checked = 0
+
+        # If the total number of legal moves is less than 10, then increase the depth by 1.
+        if chessboard.legal_moves.count() < 10:
+            depth += 1
 
         for move in chessboard.legal_moves:
             if move in invalid_moves:
@@ -168,12 +188,10 @@ class AI:
             if time.time() - start_time > time_limit:
                 break
 
-            # Check if the move puts the enemy king in checkmate.
-            if copy.is_checkmate():
-                return move
-
             # Calculate the value of this move
             score = self.alphabeta(copy, depth, -AI.INFINITE, AI.INFINITE, True)
+            if depth % 2 == 0:
+                score = -score
             if score < best_score:  # If the score is better, choose this move.
                 best_score = score
                 best_move = [move]
@@ -182,6 +200,9 @@ class AI:
 
         if len(best_move) == 0:
             return None
+        self.total_optimal_moves = len(best_move)
+        self.best_move_score = best_score
+        self.calculate_time = time.time() - start_time
         return random.choice(best_move)
 
     @staticmethod
@@ -228,7 +249,7 @@ class AI:
         :return:   The score
         """
         if depth == 0:  # If we have reached the end of the search
-            return Heuristics.evaluate(chessboard)  # Return the score
+            return Heuristics.evaluate(chessboard, self.color)  # Return the score
 
         if maximizing:  # If we are maximizing
             best_score = -AI.INFINITE

@@ -65,6 +65,7 @@ class Chess(BaseRoom):
 
             self.score = 0
             self.last_move = None
+            # self.users = [ChessAI.ChessAI(self.board, self), ChessAI.ChessAI(self.board, self)]
             self.current_player = self.users[0]
             self.taken_pieces = {"white": [], "black": []}
 
@@ -177,15 +178,14 @@ class Chess(BaseRoom):
         ai_exceptions = 0
         while not self.game_over:
             try:
-                if self.board.turn == chess.BLACK:
+                if isinstance(self.current_player, ChessAI.ChessAI):
                     # self.last_move = self.board.peek()
                     # self.users[1].update_player_move(self.board.peek())
                     start_time = time.time()
-                    ai_move = self.users[1].get_ai_move(self.board)
-                    
-                    logging.info(f"AI move: {ai_move} in {round(time.time() - start_time, 2)} seconds, "
-                                 f"analyzed {self.users[1].get_last_move_debug()} legal moves")
-                    self.post_move(self.users[1], ai_move)
+                    ai_move = self.current_player.get_ai_move(self.board)
+
+                    logging.info(self.current_player.ai_move_debug())
+                    self.post_move(self.current_player, ai_move)
             except Exception as e:
                 logging.exception(e)
                 ai_exceptions += 1
