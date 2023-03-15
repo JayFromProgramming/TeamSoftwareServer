@@ -1,8 +1,10 @@
+import datetime
 import time
 
 from aiohttp import web
 import os
 
+import Ratelimiter
 from GameManagers.base_room import BaseRoom
 from user import User, Users
 
@@ -169,7 +171,8 @@ class RoomManager:
         """
         pass
 
-    def has_room_changed(self, request):
+    @Ratelimiter.RateLimit(limit=5, per=datetime.timedelta(minutes=1), bucket_type=Ratelimiter.BucketTypes.Endpoint)
+    def has_board_changed(self, request):
         """
         Returns whether the room has changed since the last time the user checked
         :param request:

@@ -1,3 +1,4 @@
+import datetime
 import json
 import socket
 import struct
@@ -16,6 +17,7 @@ import sqlite3
 import threading
 import hashlib
 
+import Ratelimiter
 from roommanager import RoomManager
 from user import User
 
@@ -168,11 +170,11 @@ class main:
             web.get('/create_user/{username}', self.create_user),  # Creates a new user
             web.get('/get_user/{user_id}', self.get_username),  # Gets the username of a user
             web.get('/login/{user_hash}', self.login),  # Logs a user in, and returns the users username
-            web.post('/logout', self.logout),
+            web.post('/logout', self.logout),  # Logs a user out
             web.get('/get_rooms', self.room_manager.get_rooms),
             web.get('/get_games', self.room_manager.get_available_games),
             web.get('/room/get_state', self.room_manager.get_board_state),
-            web.get('/room/has_changed', self.room_manager.has_room_changed),
+            web.get('/room/has_changed', self.room_manager.has_board_changed),
             web.get('/room/get_saved_info/{game_id}', self.room_manager.get_save_game_info),
             # Post requests
             web.post('/create_room', self.room_manager.create_room),
@@ -231,6 +233,7 @@ class main:
         logging.info(f"Created user {user.username} with id {user.hash_id}")
         return response
 
+    @Ratelimiter.RateLimit(limit=10, per=datetime.timedelta(seconds=30), bucket_type=Ratelimiter.BucketTypes.Endpoint)
     def get_username(self, request):
         """
         Gets the username of a user from their ID (Not their hash)
