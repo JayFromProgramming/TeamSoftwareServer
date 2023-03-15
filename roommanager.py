@@ -11,14 +11,16 @@ from user import User, Users
 from loguru import logger as logging
 
 # Import all files in the gamemanagers folder
-logging.info("Loading all room modules")
-for file in os.listdir("GameManagers"):
-    if file.endswith(".py"):
-        try:
-            exec(f"from GameManagers.{file[:-3]} import *")
-        except Exception as e:
-            logging.info(f"Failed to load {file}: {e}")
-            print(f"Failed to load {file}: {e}")
+logging.info("Loading all room packages")
+for directory in os.listdir("GameManagers"):
+    if os.path.isdir(f"GameManagers/{directory}") and directory != "__pycache__":
+        # Check if the package has an __init__.py file
+        if os.path.isfile(f"GameManagers/{directory}/__init__.py"):
+            logging.info(f"Loading package {directory}")
+            try:
+                exec(f"from GameManagers.{directory} import *")
+            except Exception as e:
+                logging.error(f"Failed to load package {directory}: {e}")
 logging.info(f"Loaded {len(BaseRoom.__subclasses__())} room modules")
 
 

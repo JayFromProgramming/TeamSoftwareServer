@@ -5,7 +5,8 @@ import time
 from GameManagers.base_room import BaseRoom
 from loguru import logger as logging
 
-from GameAI.BattleShipAI import BattleShipAI
+from .ai import BattleShipAI
+
 
 class BattleShip(BaseRoom):
     playable = True

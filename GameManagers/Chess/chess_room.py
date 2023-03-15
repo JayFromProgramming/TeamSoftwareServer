@@ -10,7 +10,7 @@ import chess.variant
 from GameManagers.base_room import BaseRoom
 from loguru import logger as logging
 
-from GameAI import ChessAI
+from .ai import ChessAI
 
 
 class Chess(BaseRoom):

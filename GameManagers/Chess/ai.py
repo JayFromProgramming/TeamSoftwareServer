@@ -5,7 +5,7 @@ Modified from the original code by Dirk Hoekstra (https://github.com/Dirk94/Ches
 # from GameAI.ChessAI import board
 import time
 
-from GameAI.ChessAI import ai
+from .ai_logic import AI
 
 import chess
 
@@ -14,7 +14,7 @@ class ChessAI:
 
     def __init__(self, room_board, current_room, color: chess.Color):
         self.room_board = room_board
-        self.ai = ai.AI(color)
+        self.ai = AI(color)
 
         self.username = "ChessAI"
         self.user_id = -1
