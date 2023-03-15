@@ -162,17 +162,19 @@ class main:
         self.init_database()
         self.room_manager = RoomManager(self.database)
         self.app.add_routes([
-            web.get('/get_server_id', self.get_server_id),
-            web.get('/create_user/{username}', self.create_user),
-            web.get('/get_user/{user_id}', self.get_username),
-            web.get('/login/{user_hash}', self.login),
+            # Get requests
+            web.get('/', self.bad_usage),  # Bad usage
+            web.get('/get_server_id', self.get_server_id),  # Returns the servers hash ID
+            web.get('/create_user/{username}', self.create_user),  # Creates a new user
+            web.get('/get_user/{user_id}', self.get_username),  # Gets the username of a user
+            web.get('/login/{user_hash}', self.login),  # Logs a user in, and returns the users username
             web.post('/logout', self.logout),
             web.get('/get_rooms', self.room_manager.get_rooms),
             web.get('/get_games', self.room_manager.get_available_games),
             web.get('/room/get_state', self.room_manager.get_board_state),
             web.get('/room/has_changed', self.room_manager.has_room_changed),
             web.get('/room/get_saved_info/{game_id}', self.room_manager.get_save_game_info),
-
+            # Post requests
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),
             web.post('/leave_room', self.room_manager.leave_room),
@@ -217,6 +219,11 @@ class main:
         return web.json_response({"server_id": server_id, "server_name": server_name}, status=200)
 
     def create_user(self, request):
+        """
+        Creates a new user from a requested username
+        :param request:
+        :return: The created user's hash ID, which the client is expected to save for all future requests
+        """
         username = request.match_info.get('username')
         user = self.room_manager.users.create_user(username)
         response = web.json_response({"user_id": user.hash_id}, status=200)
@@ -225,6 +232,11 @@ class main:
         return response
 
     def get_username(self, request):
+        """
+        Gets the username of a user from their ID (Not their hash)
+        :param request: A web request object
+        :return: Either a 404 if the user is not found, or a 200 with the users username
+        """
         user_id = request.match_info.get('user_id')
         user = self.room_manager.users.get_user_by_id(user_id)
         if user is None:
@@ -233,6 +245,11 @@ class main:
         return web.json_response({"username": user.username}, status=200)
 
     def login(self, request):
+        """
+        Logs a user in, and returns the users username
+        :param request: A web request object
+        :return: Either a 404 if the user is not found, or a 200 with the users username
+        """
         user_hash = request.match_info.get('user_hash')
         user = self.room_manager.users.get_user(user_hash)
         if user is None:
@@ -243,7 +260,20 @@ class main:
         response.set_cookie("user_id", str(user.hash_id))
         return response
 
+    def bad_usage(self, request):
+        """
+        Called if a user trys to load the webserver without a valid endpoint
+        :param request:
+        :return: A 404 error, with a message saying that the endpoint is not valid
+        """
+        return web.json_response({"error": "Invalid endpoint"}, status=404)
+
     async def logout(self, request):
+        """
+        Logs a user out, is used to allow clients to indicate that they are no longer using the server
+        :param request:
+        :return:
+        """
         user_hash = request.cookies.get("user_hash")
         user = self.room_manager.users.get_user(user_hash)
         if user is None:

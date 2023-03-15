@@ -43,7 +43,7 @@ class ChessAI:
             f"Search Depth:  {self.ai.search_depth}",
             f"Checked Moves: {self.ai.total_moves_checked}",
             f"Optimal Moves: {self.ai.total_optimal_moves}",
-            f"Move Score:    {self.ai.best_move_score}",
+            f"Move Score:    {self.ai.best_move_score} (Max: {self.ai.highest_score_calculated})"
         ]
         return "\n".join(text)
 

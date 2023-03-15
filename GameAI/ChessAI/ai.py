@@ -69,7 +69,7 @@ class Heuristics:
         chess.BISHOP: 330,
         chess.ROOK: 500,
         chess.QUEEN: 900,
-        chess.KING: 500
+        chess.KING: 1500
     }
 
     @staticmethod
@@ -160,9 +160,10 @@ class AI:
         self.total_legal_moves = 0
         self.search_depth = 0
         self.color = color
+        self.highest_score_calculated = -AI.INFINITE
 
     def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2,
-                    time_limit=60, skill=1):
+                    time_limit=60, skill=0.5):
         """
         Returns the best move for the AI.
         :param chessboard:  The chessboard
@@ -176,6 +177,7 @@ class AI:
         best_score = -AI.INFINITE
         start_time = time.time()
         self.total_moves_checked = 0
+        self.highest_score_calculated = -AI.INFINITE
 
         # If the total number of legal moves is less than 10, then increase the depth by 1.
         if chessboard.legal_moves.count() < 10:
@@ -195,6 +197,9 @@ class AI:
             # Calculate the value of this move
             score = self.alphabeta(copy, depth, -AI.INFINITE, AI.INFINITE, False)
             if score > best_score:  # If the score is better, choose this move.
+                self.highest_score_calculated = score
+                if random.random() > skill:  # If the skill is not 1, then randomly skip some moves.
+                    continue  # This is to reduce the skill of the AI.
                 best_score = score
                 best_move = [move]
             elif score == best_score:  # If the score is the same, choose a random move.
