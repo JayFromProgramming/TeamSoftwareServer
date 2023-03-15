@@ -67,7 +67,7 @@ class Chess(BaseRoom):
             self.game_over = False
             self.last_move = None
             # self.spectators.append(self.users[0])
-            # self.users = [ChessAI.ChessAI(self.board, self, chess.WHITE), ChessAI.ChessAI(self.board, self, chess.BLACK)]
+            # self.users = [ChessAI(self.board, self, chess.WHITE), ChessAI(self.board, self, chess.BLACK)]
             self.current_player = self.users[0]
             self.taken_pieces = {"white": [], "black": []}
 
@@ -180,7 +180,7 @@ class Chess(BaseRoom):
         ai_exceptions = 0
         while not self.game_over:
             try:
-                if isinstance(self.current_player, ChessAI.ChessAI):
+                if isinstance(self.current_player, ChessAI):
                     # self.last_move = self.board.peek()
                     # self.users[1].update_player_move(self.board.peek())
                     # start_time = time.time()
@@ -261,7 +261,7 @@ class Chess(BaseRoom):
         else:
             # Add an AI player
             logging.info(f"Adding an AI player to room {self.room_id}")
-            self.users.append(ChessAI.ChessAI(self.board, self, chess.BLACK))
+            self.users.append(ChessAI(self.board, self, chess.BLACK))
             self.current_player = self.users[1]
             threading.Thread(target=self.chess_ai_thread, daemon=True).start()
 
