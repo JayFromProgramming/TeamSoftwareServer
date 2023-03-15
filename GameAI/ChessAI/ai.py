@@ -163,7 +163,7 @@ class AI:
         self.highest_score_calculated = -AI.INFINITE
 
     def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2,
-                    time_limit=60, skill=0.5):
+                    time_limit=60, skill=1):
         """
         Returns the best move for the AI.
         :param chessboard:  The chessboard
