@@ -233,7 +233,7 @@ class main:
         logging.info(f"Created user {user.username} with id {user.hash_id}")
         return response
 
-    @ratelimiter.RateLimit(limit=10, per=datetime.timedelta(seconds=30), bucket_type=Ratelimiter.BucketTypes.Endpoint)
+    @ratelimiter.RateLimit(limit=10, per=datetime.timedelta(seconds=30), bucket_type=ratelimiter.BucketTypes.Endpoint)
     def get_username(self, request):
         """
         Gets the username of a user from their ID (Not their hash)
