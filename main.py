@@ -17,7 +17,7 @@ import sqlite3
 import threading
 import hashlib
 
-import Ratelimiter
+import ratelimiter
 from roommanager import RoomManager
 from user import User
 
@@ -233,7 +233,7 @@ class main:
         logging.info(f"Created user {user.username} with id {user.hash_id}")
         return response
 
-    @Ratelimiter.RateLimit(limit=10, per=datetime.timedelta(seconds=30), bucket_type=Ratelimiter.BucketTypes.Endpoint)
+    @ratelimiter.RateLimit(limit=10, per=datetime.timedelta(seconds=30), bucket_type=Ratelimiter.BucketTypes.Endpoint)
     def get_username(self, request):
         """
         Gets the username of a user from their ID (Not their hash)

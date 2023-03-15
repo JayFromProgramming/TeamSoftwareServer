@@ -4,14 +4,14 @@ import time
 from aiohttp import web
 import os
 
-import Ratelimiter
+import ratelimiter
 from GameManagers.base_room import BaseRoom
 from user import User, Users
 
 from loguru import logger as logging
 
 # Import all files in the gamemanagers folder
-logging.info("Loading all room packages")
+logging.info("Searching for room packages")
 for directory in os.listdir("GameManagers"):
     if os.path.isdir(f"GameManagers/{directory}") and directory != "__pycache__":
         # Check if the package has an __init__.py file
@@ -173,7 +173,7 @@ class RoomManager:
         """
         pass
 
-    @Ratelimiter.RateLimit(limit=80, per=datetime.timedelta(minutes=1), bucket_type=Ratelimiter.BucketTypes.Endpoint)
+    @ratelimiter.RateLimit(limit=80, per=datetime.timedelta(minutes=1), bucket_type=ratelimiter.BucketTypes.Endpoint)
     def has_board_changed(self, request):
         """
         Returns whether the room has changed since the last time the user checked
