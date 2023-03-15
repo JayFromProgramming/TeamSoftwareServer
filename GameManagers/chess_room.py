@@ -64,13 +64,15 @@ class Chess(BaseRoom):
                 datetime.timedelta(seconds=starting_config["time_added_per_move"] if "time_added_per_move" in starting_config else 10)
 
             self.score = 0
+            self.game_over = False
             self.last_move = None
-            # self.users = [ChessAI.ChessAI(self.board, self), ChessAI.ChessAI(self.board, self)]
+            # self.spectators.append(self.users[0])
+            # self.users = [ChessAI.ChessAI(self.board, self, chess.WHITE), ChessAI.ChessAI(self.board, self, chess.BLACK)]
             self.current_player = self.users[0]
             self.taken_pieces = {"white": [], "black": []}
 
-        self.game_over = False
         threading.Thread(target=self.timer_thread, daemon=True).start()
+        # threading.Thread(target=self.chess_ai_thread, daemon=True).start()
 
     def database_init(self):
         # Create the table to save chess games if it doesn't exist
@@ -181,7 +183,7 @@ class Chess(BaseRoom):
                 if isinstance(self.current_player, ChessAI.ChessAI):
                     # self.last_move = self.board.peek()
                     # self.users[1].update_player_move(self.board.peek())
-                    start_time = time.time()
+                    # start_time = time.time()
                     ai_move = self.current_player.get_ai_move(self.board)
 
                     logging.info(self.current_player.ai_move_debug())
@@ -197,7 +199,7 @@ class Chess(BaseRoom):
                         player.room_updated = True
             else:
                 ai_exceptions = 0
-            time.sleep(random.uniform(0.5, 2.5))  # Sleep for a random amount of time to make it seem more human
+            # time.sleep(random.uniform(0.5, 2.5))  # Sleep for a random amount of time to make it seem more human
 
     def check_if_capture(self, move):
         """
@@ -332,4 +334,3 @@ class Chess(BaseRoom):
             self.users.append(users.get_user(game[3]))
 
         self.current_player = self.users[0] if self.board.turn == chess.WHITE else self.users[1]
-
