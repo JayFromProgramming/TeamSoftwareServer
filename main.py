@@ -3,15 +3,11 @@ import json
 import socket
 import struct
 import sys
-import traceback
 
 from loguru import logger as logging
 import random
 import netifaces
-import aiohttp
-import asyncio
 
-import requests
 from aiohttp import web
 import sqlite3
 import threading
@@ -170,13 +166,13 @@ class main:
             web.get('/create_user/{username}', self.create_user),  # Creates a new user
             web.get('/get_user/{user_id}', self.get_username),  # Gets the username of a user
             web.get('/login/{user_hash}', self.login),  # Logs a user in, and returns the users username
-            web.post('/logout', self.logout),  # Logs a user out
             web.get('/get_rooms', self.room_manager.get_rooms),
             web.get('/get_games', self.room_manager.get_available_games),
             web.get('/room/get_state', self.room_manager.get_board_state),
             web.get('/room/has_changed', self.room_manager.has_board_changed),
             web.get('/room/get_saved_info/{game_id}', self.room_manager.get_save_game_info),
             # Post requests
+            web.post('/logout', self.logout),  # Logs a user out
             web.post('/create_room', self.room_manager.create_room),
             web.post('/join_room', self.room_manager.join_room),
             web.post('/leave_room', self.room_manager.leave_room),

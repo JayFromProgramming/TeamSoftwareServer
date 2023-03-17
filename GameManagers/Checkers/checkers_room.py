@@ -144,7 +144,7 @@ class Checkers(BaseRoom):
         if res == 2:
             return {"error": "blocked_destination"}
 
-        #self.current_player = self.users[0] if self.current_player != self.users[0] else self.users[1]
+        # self.current_player = self.users[0] if self.current_player != self.users[0] else self.users[1]
 
         self.game_over = True if self.check_win_conditions(user) else self.game_over
 

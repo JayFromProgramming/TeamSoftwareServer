@@ -229,9 +229,6 @@ class Chess(BaseRoom):
     def post_move(self, user, move):
         # print(user.username, move)
 
-        for player in self.users + self.spectators:
-            player.room_updated = True
-
         # if len(self.users) < 2:
         #     return {"error": "not_enough_players"}
 
@@ -239,6 +236,9 @@ class Chess(BaseRoom):
             logging.info(f"User {user.username} tried to move out of turn, current player is "
                          f"{self.current_player.username}")
             return {"error": "out_of_turn"}
+
+        for player in self.users + self.spectators:
+            player.room_updated = True
 
         try:
             self.check_if_capture(move)
