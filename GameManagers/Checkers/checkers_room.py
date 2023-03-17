@@ -51,6 +51,14 @@ class Checkers(BaseRoom):
         self.current_player = self.users[0] if self.current_player == self.users[1] else self.users[1]
 
     # 0 None 1 red 2 redk 3 black 4 blackk
+
+    '''
+    0 = No piece
+    1 = Red Normal Piece
+    2 = Red King Piece
+    3 = Black Normal Piece
+    4 = Black King Piece
+    '''
     def create_board(self):
         self.board = [[0 for i in range(8)] for i in range(8)]
         for i in range(3):
