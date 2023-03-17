@@ -13,7 +13,6 @@ class Checkers(BaseRoom):
         self.board = []
         self.create_board()
         self.max_users = 2
-        self.pieces = {}
 
         self.last_move = None
         self.current_player = self.users[0]
@@ -50,8 +49,6 @@ class Checkers(BaseRoom):
     def toggle_current_player(self):
         self.current_player = self.users[0] if self.current_player == self.users[1] else self.users[1]
 
-    # 0 None 1 red 2 redk 3 black 4 blackk
-
     '''
     0 = No piece
     1 = Red Normal Piece
@@ -74,7 +71,6 @@ class Checkers(BaseRoom):
             "your_color": 0 if user == self.users[0] else 1 if user in self.users else None,
             "current_player": 0 if self.current_player == self.users[0] else 1,
             "board": self.board if user == self.users[0] else self.flip_board(),
-            "pieces": self.pieces,
             "last_move": str(self.last_move),
             "game_over": self.game_over,
         }
@@ -115,13 +111,72 @@ class Checkers(BaseRoom):
 
         return 0
 
+    '''
+    Checking if a piece can move legally
+    (please dont try to understand this code, i really hope it works because debugging this will be a bitch)
+    '''
+    def can_move(self, i, j):
+        chu = self.board[i][j]
+        good = 0
+        if chu in [1, 2]:
+            tempi = i - 1
+            if i > -1:
+                if j + 1 < 8 and self.board[tempi][j + 1] == 0:
+                    good = 1 if good == 0 else good
+                elif j - 1 >= 0 and self.board[tempi][j - 1] == 0:
+                    good = 1 if good == 0 else good
 
+                if j + 2 < 8 and tempi + 1 < 8 and self.board[tempi][j + 1] in [3, 4] and self.board[tempi + 1][j + 2]:
+                    good = 2
+
+                if j - 2 >= 0 and tempi + 1 < 8 and self.board[tempi][j - 1] in [3, 4] and self.board[tempi + 1][j - 2]:
+                    good = 2
+            tempi += 2
+            if chu == 2 and tempi < 8:
+                if j + 1 < 8 and self.board[tempi][j + 1] == 0:
+                    good = 1 if good == 0 else good
+                if j - 1 >= 0 and self.board[tempi][j - 1] == 0:
+                    good = 1 if good == 0 else good
+
+                if j + 2 < 8 and tempi - 1 < 8 and self.board[tempi][j + 1] in [3, 4] and self.board[tempi - 1][j + 2]:
+                    good = 2
+
+                if j - 2 >= 0 and tempi - 1 < 8 and self.board[tempi][j - 1] in [3, 4] and self.board[tempi - 1][j - 2]:
+                    good = 2
+
+        return good
+
+    '''
+    Checking to see if a user won the game
+    '''
     def check_win_conditions(self, user):
-        pass
+        chu = 1 if self.users[1] == user else 3
 
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] in [chu, chu + 1]:
+                    if self.can_move(i, j) > 0:
+                        return False
+
+        return True
+    '''
+    Making a list of forced moves for a user, if any
+    '''
     def forced_moves(self, user):
-        return []
+        moves = []
+        nums = [1, 2] if self.users[0] == user else [3, 4]
 
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] in nums:
+                    if self.can_move(i, j) == 2:
+                        pass
+
+        return moves
+
+    '''
+    Physically making the move on the server board
+    '''
     def make_move(self, move, mid=None):
         self.board[move[2]][move[3]] = self.board[move[0]][move[1]]
         self.board[move[0]][move[1]] = 0
@@ -172,7 +227,9 @@ class Checkers(BaseRoom):
         else:
             self.users.append(user)
 
-
+'''
+Only meant for testing the board
+'''
 if __name__ == '__main__':
     c = Checkers(None)
     c.create_board()
