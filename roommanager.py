@@ -45,6 +45,13 @@ class RoomManager:
                           "room_id TEXT PRIMARY KEY, room_type TEXT,"
                           " room_name TEXT, room_password TEXT)")
 
+    """
+    Expected JSON: { 
+        "room_type": "RoomType",
+        "room_name": "RoomName",
+        "room_config": {"option_name": option_value} [optional]
+        }
+    """
     async def create_room(self, request):
         """
         Creates a new room
@@ -79,6 +86,7 @@ class RoomManager:
             logging.exception(f"Failed to create room: {e}")
             return web.json_response({"error": "Failed to create room"}, status=500)
 
+
     def get_rooms(self, request):
         """
         Returns a list of rooms over the request
@@ -95,6 +103,12 @@ class RoomManager:
             return web.json_response({"error": "Failed to get rooms"}, status=500)
         return web.json_response(rooms, status=200)
 
+    """
+    Expected JSON: {
+        "room_id": "RoomID",
+        "room_password": "RoomPassword" [optional]
+    }
+    """
     async def join_room(self, request):
         logging.info(f"Room join request: {request}")
         data = await request.json()
