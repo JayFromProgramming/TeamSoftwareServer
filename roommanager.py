@@ -58,17 +58,17 @@ class RoomManager:
         room_config = data["room_config"] if "room_config" in data else None
         cookie = request.cookies["hash_id"] if "hash_id" in request.cookies else None
         if cookie is None:
-            logging.info(f"Missing cookie")
+            logging.info(f"Endpoint accessed without authentication: {request.remote}")
             return web.json_response({"error": "Missing Authentication"}, status=401)
         if room_type is None or room_name is None:
-            logging.info(f"Missing room type or name: {room_type}, {room_name}")
+            logging.info(f"Missing room type or name: {room_type}, {room_name} from {request.remote}")
             return web.json_response({"error": "Invalid request"}, status=400)
         if room_type not in self.valid_room_types:
-            logging.info(f"Invalid room type: {room_type}")
+            logging.info(f"Invalid room type: {room_type} from {request.remote}")
             return web.json_response({"error": "Invalid room type"}, status=400)
         user = self.users.get_user(cookie)
         if user is None:
-            logging.info(f"Invalid user: {cookie}")
+            logging.info(f"Invalid user: {cookie} from {request.remote}")
             return web.json_response({"error": "Invalid user"}, status=400)
         try:
             room = self.valid_room_types[room_type](self.database, name=room_name, host=user, starting_config=room_config)
@@ -102,17 +102,17 @@ class RoomManager:
         room_password = data["room_password"] if "room_password" in data else None
         user_hash = request.cookies["hash_id"] if "hash_id" in request.cookies else None
         if user_hash is None:
-            logging.info(f"Missing cookie")
+            logging.info(f"Endpoint accessed without authentication: {request.remote}")
             return web.json_response({"error": "Missing Authentication"}, status=401)
         if room_id is None:
-            logging.info(f"Missing room id")
+            logging.info(f"Missing room id: {room_id}: {request.remote}")
             return web.json_response({"error": "Invalid request"}, status=400)
         if room_id not in self.rooms:
-            logging.info(f"Invalid room id: {room_id}")
+            logging.info(f"Invalid room id: {room_id}: {request.remote}")
             return web.json_response({"error": "Invalid room id"}, status=404)
         user = self.users.get_user(user_hash)
         if user is None:
-            logging.info(f"Invalid user: {user_hash}")
+            logging.info(f"Invalid user: {user_hash}: {request.remote}")
             return web.json_response({"error": "Invalid user"}, status=400)
         if user.current_room is not None:
             # Check if the user is already in the room

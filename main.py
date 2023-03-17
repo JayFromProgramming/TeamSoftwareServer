@@ -171,8 +171,8 @@ class main:
             web.get('/get_user/{user_id}', self.get_username),  # Gets the username of a user
             web.get('/login/{user_hash}', self.login),  # Logs a user in, and returns the users username
             web.post('/logout', self.logout),  # Logs a user out
-            web.get('/get_rooms', self.room_manager.get_rooms),
-            web.get('/get_games', self.room_manager.get_available_games),
+            web.get('/get_rooms', self.room_manager.get_rooms),  # Returns a list of all rooms
+            web.get('/get_games', self.room_manager.get_available_games),  # Returns the games supported by the server
             web.get('/room/get_state', self.room_manager.get_board_state),
             web.get('/room/has_changed', self.room_manager.has_board_changed),
             web.get('/room/get_saved_info/{game_id}', self.room_manager.get_save_game_info),
@@ -184,6 +184,7 @@ class main:
             web.post('/room/save_game', self.room_manager.save_game),
             web.post('/room/load_game', self.room_manager.load_game),
         ])
+
         self.webserver_port = 47673
         self.webserver_address = check_interface_usage(self.webserver_port)
 
