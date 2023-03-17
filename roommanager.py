@@ -1,23 +1,26 @@
+import datetime
 import time
 
 from aiohttp import web
 import os
 
+import ratelimiter
 from GameManagers.base_room import BaseRoom
 from user import User, Users
 
-import logging
-
-logging = logging.getLogger(__name__)
+from loguru import logger as logging
 
 # Import all files in the gamemanagers folder
-logging.info("Loading all room modules")
-for file in os.listdir("GameManagers"):
-    if file.endswith(".py"):
-        try:
-            exec(f"from GameManagers.{file[:-3]} import *")
-        except Exception as e:
-            logging.info(f"Failed to load {file}: {e}")
+logging.info("Searching for room packages")
+for directory in os.listdir("GameManagers"):
+    if os.path.isdir(f"GameManagers/{directory}") and directory != "__pycache__":
+        # Check if the package has an __init__.py file
+        if os.path.isfile(f"GameManagers/{directory}/__init__.py"):
+            logging.info(f"Loading package {directory}")
+            try:
+                exec(f"from GameManagers.{directory} import *")
+            except Exception as e:
+                logging.error(f"Failed to load package {directory}: {e}")
 logging.info(f"Loaded {len(BaseRoom.__subclasses__())} room modules")
 
 
@@ -33,6 +36,8 @@ class RoomManager:
             if room_type.playable:
                 logging.info(f"Found room type: {room_type.__name__}")
                 self.valid_room_types[room_type.__name__] = room_type
+            else:
+                logging.info(f"Found non-playable room type: {room_type.__name__}")
         self.users = Users(self.database)
 
     def database_init(self):
@@ -46,7 +51,7 @@ class RoomManager:
         :param request: A web request
         :return:
         """
-        logging.info(f"Room creation request: {request}")
+        logging.info(f"Room creation request from {request.remote}")
         data = await request.json()
         room_type = data["room_type"] if "room_type" in data else None
         room_name = data["room_name"] if "room_name" in data else None
@@ -68,7 +73,7 @@ class RoomManager:
         try:
             room = self.valid_room_types[room_type](self.database, name=room_name, host=user, starting_config=room_config)
             self.rooms[room.room_id] = room
-            logging.info(f"Created room: {room.room_id}")
+            logging.info(f"Created room: {room.room_id} with starting config: {room_config}")
             return web.json_response({"room_id": room.room_id})
         except Exception as e:
             logging.exception(f"Failed to create room: {e}")
@@ -80,11 +85,11 @@ class RoomManager:
         :param request: A web request
         :return:
         """
-        logging.info(f"Room list request: {request}")
-        rooms = []
+        logging.info(f"Room list request from {request.remote}")
+        rooms = {"rooms": []}
         try:
             for room in self.rooms.values():
-                rooms.append(room.get_game_info())
+                rooms["rooms"].append(room.get_game_info())
         except Exception as e:
             logging.exception(f"Failed to get rooms: {e}")
             return web.json_response({"error": "Failed to get rooms"}, status=500)
@@ -168,13 +173,14 @@ class RoomManager:
         """
         pass
 
-    def has_room_changed(self, request):
+    # @ratelimiter.RateLimit(limit=80, per=datetime.timedelta(minutes=1), bucket_type=ratelimiter.BucketTypes.Endpoint)
+    def has_board_changed(self, request):
         """
         Returns whether the room has changed since the last time the user checked
         :param request:
         :return:
         """
-        logging.debug(f"Room change request: {request}")
+        # logging.debug(f"Room change request: {request}")
         if "user_hash" not in request.cookies:
             return web.json_response({"error": "Missing Authentication"}, status=401)
         user = self.users.get_user(request.cookies["user_hash"])
@@ -196,7 +202,7 @@ class RoomManager:
         :param request:
         :return:
         """
-        logging.info(f"Board state request: {request}")
+        logging.info(f"Board state request from endpoint: {request.remote}")
         if "user_hash" not in request.cookies:
             return web.json_response({"error": "Missing Authentication"}, status=401)
         user = self.users.get_user(request.cookies["user_hash"])
@@ -221,15 +227,17 @@ class RoomManager:
         data = await request.json()
         move = data["move"] if "move" in data else None
         if move is None:
+            logging.warning(f"Invalid move request: {data}")
             return web.json_response({"error": "Invalid request"}, status=400)
         room = user.current_room
         if room is None:
+            logging.warning(f"User {user.user_id} not in a room")
             return web.json_response({"error": "User not in a room"}, status=402)
         try:
-            # print(user.username, move)
             result = room.post_move(user, move)
             if 'error' in result:
-                return web.json_response(result, status=400)
+                logging.warning(f"Move result returned error: {result}")
+                return web.json_response(result, status=501)
             else:
                 return web.json_response(result, status=200)
         except Exception as e:
@@ -322,7 +330,7 @@ class RoomManager:
         :return:
         """
         while True:
-            logging.debug("Cleaning up rooms")
+            # logging.debug("Cleaning up rooms")
             to_delete = []
             for room in self.rooms.values():
                 if room.is_empty():
@@ -330,5 +338,5 @@ class RoomManager:
                     to_delete.append(room.room_id)
             for room_id in to_delete:
                 self.rooms.pop(room_id)
-            logging.debug("Finished cleaning up rooms")
+            # logging.debug("Finished cleaning up rooms")
             time.sleep(30)

@@ -62,6 +62,14 @@ class User:
         """
         self.last_ping = datetime.datetime.now()
 
+    def logout(self):
+        """
+        Logs out the user
+        :return:
+        """
+        self.leave_room()
+        self.last_ping = datetime.datetime.fromtimestamp(0)
+
     @property
     def online(self):
         """
@@ -88,6 +96,9 @@ class User:
 
     def __str__(self):
         return self.user_id
+
+    def __repr__(self):
+        return "User: " + self.username
 
     def encode(self):
         """
@@ -171,3 +182,4 @@ class Users:
             if user.user_id == user_id:
                 return user
         return None
+
