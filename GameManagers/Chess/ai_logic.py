@@ -83,13 +83,24 @@ class Heuristics:
 
         if board.is_checkmate():
             if board.turn == ai_color:
-                return -9999999
+                return -AI.INFINITE
             else:
-                return 9999999
+                return AI.INFINITE
 
         # Preform check evaluation
 
         material = Heuristics.get_material_score(board, ai_color)
+
+        if board.is_game_over():
+            # If the move is not going to result in an AI win, try to avoid it
+            if board.is_stalemate():
+                return 999999 if material < 0 else -999999  # If the AI is losing, try to achieve a stalemate
+            elif board.is_insufficient_material():
+                return 999998 if material < 0 else -999998  # If the AI is losing, try to achieve a draw
+            elif board.is_seventyfive_moves():
+                return 999997 if material < 0 else -999997  # If the AI is losing, try to achieve a draw
+            elif board.is_fivefold_repetition():
+                return 999996 if material < 0 else -999996  # If the AI is losing, try to achieve a draw
 
         pawns = Heuristics.get_piece_position_score(board, chess.PAWN, Heuristics.PAWN_TABLE)
         knights = Heuristics.get_piece_position_score(board, chess.KNIGHT, Heuristics.KNIGHT_TABLE)
@@ -161,9 +172,11 @@ class AI:
         self.search_depth = 0
         self.color = color
         self.highest_score_calculated = -AI.INFINITE
+        self.lowest_score_calculated = AI.INFINITE
+        self.rejected_moves = 0
 
     def get_ai_move(self, chessboard: chess.Board, invalid_moves, depth=2,
-                    time_limit=60, skill=1):
+                    time_limit=120, skill=0.9):
         """
         Returns the best move for the AI.
         :param chessboard:  The chessboard
@@ -178,12 +191,14 @@ class AI:
         start_time = time.time()
         self.total_moves_checked = 0
         self.highest_score_calculated = -AI.INFINITE
+        self.lowest_score_calculated = AI.INFINITE
 
         # If the total number of legal moves is less than 10, then increase the depth by 1.
         if chessboard.legal_moves.count() < 10:
-            depth += 1
+            depth += 2
         self.search_depth = depth
         self.total_legal_moves = chessboard.legal_moves.count()
+        self.rejected_moves = 0
         for move in chessboard.legal_moves:
             if move in invalid_moves:
                 continue
@@ -196,10 +211,12 @@ class AI:
 
             # Calculate the value of this move
             score = self.alphabeta(copy, depth, -AI.INFINITE, AI.INFINITE, False)
+            self.highest_score_calculated = max(self.highest_score_calculated, score)
+            self.lowest_score_calculated = min(self.lowest_score_calculated, score)
+            if random.random() > skill and chessboard.legal_moves.count() > 5:  # If the skill is not 1, then randomly skip some moves.
+                self.rejected_moves += 1
+                continue  # This is to reduce the skill of the AI.
             if score > best_score:  # If the score is better, choose this move.
-                self.highest_score_calculated = score
-                if random.random() > skill:  # If the skill is not 1, then randomly skip some moves.
-                    continue  # This is to reduce the skill of the AI.
                 best_score = score
                 best_move = [move]
             elif score == best_score:  # If the score is the same, choose a random move.
@@ -258,6 +275,8 @@ class AI:
 
         if maximizing:  # If we are maximizing
             best_score = -AI.INFINITE
+            if chessboard.legal_moves.count() == 0:
+                return Heuristics.evaluate(chessboard, self.color)
             for move in chessboard.legal_moves:  # For each move
                 self.total_moves_checked += 1
                 copy = chessboard.copy()
@@ -271,6 +290,8 @@ class AI:
             return best_score
         else:  # If we are minimizing
             best_score = AI.INFINITE
+            if chessboard.legal_moves.count() == 0:
+                return Heuristics.evaluate(chessboard, self.color)
             for move in chessboard.legal_moves:  # For each move
                 self.total_moves_checked += 1
                 copy = chessboard.copy()

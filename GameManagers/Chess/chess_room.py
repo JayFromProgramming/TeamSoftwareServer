@@ -66,13 +66,13 @@ class Chess(BaseRoom):
             self.score = 0
             self.game_over = False
             self.last_move = None
-            # self.spectators.append(self.users[0])
-            # self.users = [ChessAI(self.board, self, chess.WHITE), ChessAI(self.board, self, chess.BLACK)]
+            self.spectators.append(self.users[0])
+            self.users = [ChessAI(self.board, self, chess.WHITE), ChessAI(self.board, self, chess.BLACK)]
             self.current_player = self.users[0]
             self.taken_pieces = {"white": [], "black": []}
 
         threading.Thread(target=self.timer_thread, daemon=True).start()
-        # threading.Thread(target=self.chess_ai_thread, daemon=True).start()
+        threading.Thread(target=self.chess_ai_thread, daemon=True).start()
 
     def database_init(self):
         # Create the table to save chess games if it doesn't exist
@@ -199,7 +199,12 @@ class Chess(BaseRoom):
                         player.room_updated = True
             else:
                 ai_exceptions = 0
-            # time.sleep(random.uniform(0.5, 2.5))  # Sleep for a random amount of time to make it seem more human
+
+        # When the game is over, set the AI to offline
+        for player in self.users + self.spectators:
+            if isinstance(player, ChessAI):
+                player.online = False
+            player.room_updated = True
 
     def check_if_capture(self, move):
         """

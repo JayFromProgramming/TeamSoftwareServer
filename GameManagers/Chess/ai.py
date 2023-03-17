@@ -39,11 +39,11 @@ class ChessAI:
             f"AI Move Debug",
             f"Time: {self.ai.calculate_time}",
             f"MPS:  {self.ai.total_moves_checked / self.ai.calculate_time}",
-            f"Legal Moves:   {self.ai.total_legal_moves}",
+            f"Legal Moves:   {self.ai.total_legal_moves} (Rejected: {self.ai.rejected_moves})",
             f"Search Depth:  {self.ai.search_depth}",
             f"Checked Moves: {self.ai.total_moves_checked}",
             f"Optimal Moves: {self.ai.total_optimal_moves}",
-            f"Move Score:    {self.ai.best_move_score} (Max: {self.ai.highest_score_calculated})"
+            f"Move Score:    {self.ai.best_move_score} (Max: {self.ai.highest_score_calculated} | Min: {self.ai.lowest_score_calculated})",
         ]
         return "\n".join(text)
 

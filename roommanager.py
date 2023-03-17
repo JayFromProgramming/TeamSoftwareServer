@@ -173,7 +173,7 @@ class RoomManager:
         """
         pass
 
-    @ratelimiter.RateLimit(limit=80, per=datetime.timedelta(minutes=1), bucket_type=ratelimiter.BucketTypes.Endpoint)
+    # @ratelimiter.RateLimit(limit=80, per=datetime.timedelta(minutes=1), bucket_type=ratelimiter.BucketTypes.Endpoint)
     def has_board_changed(self, request):
         """
         Returns whether the room has changed since the last time the user checked
