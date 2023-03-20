@@ -5,8 +5,10 @@ import time
 from GameManagers.base_room import BaseRoom
 from loguru import logger as logging
 
-from .ai import BattleShipAI
-
+try:
+    from .ai import BattleShipAI
+except SyntaxError:
+    pass
 
 class BattleShip(BaseRoom):
     playable = True
