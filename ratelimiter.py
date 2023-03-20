@@ -73,21 +73,21 @@ class RateLimit:
             request = args[1]  # type: Request
             # if not isinstance(request, Request):
             #     raise AttributeError("The first argument to a rate limited function must be a Request object")
-            match self.bucket_type:
-                case BucketTypes.Global:
-                    if self.bucket.actor_acted("global"):
-                        logging.warning(f"Rate limit exceeded for {request.remote}")
-                        return web.json_response({"error": "Rate limit exceeded"}, status=429)
-                # case BucketTypes.User:
-                #     user = self.users.get_user(request.cookies.get("user_id"))
-                #     if user is None:
-                #         raise Exception("User not found")
-                #     if self.bucket.actor_acted(user.user_id):
-                #         raise self.RateLimitExceeded
-                case BucketTypes.Endpoint:
-                    if self.bucket.actor_acted(request.remote):
-                        logging.warning(f"Rate limit exceeded for {request.remote}")
-                        return web.json_response({"error": "Rate limit exceeded"}, status=429)
+            # match self.bucket_type:
+            #     case BucketTypes.Global:
+            #         if self.bucket.actor_acted("global"):
+            #             logging.warning(f"Rate limit exceeded for {request.remote}")
+            #             return web.json_response({"error": "Rate limit exceeded"}, status=429)
+            #     # case BucketTypes.User:
+            #     #     user = self.users.get_user(request.cookies.get("user_id"))
+            #     #     if user is None:
+            #     #         raise Exception("User not found")
+            #     #     if self.bucket.actor_acted(user.user_id):
+            #     #         raise self.RateLimitExceeded
+            #     case BucketTypes.Endpoint:
+            #         if self.bucket.actor_acted(request.remote):
+            #             logging.warning(f"Rate limit exceeded for {request.remote}")
+            #             return web.json_response({"error": "Rate limit exceeded"}, status=429)
             return func(*args, **kwargs)
 
         return wrapper
