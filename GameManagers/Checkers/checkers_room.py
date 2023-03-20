@@ -4,6 +4,8 @@ import logging
 
 class Checkers(BaseRoom):
 
+    playable = True
+
     def __init__(self, database, host=None, name=None, config=None):
         super().__init__(database, name, host, config)
         if config is None:
@@ -65,6 +67,10 @@ class Checkers(BaseRoom):
         for i in range(3):
             for j in range(1, 8, 2):
                 self.board[7 - i][j] = 1
+
+        for i in range(8):
+            self.board[1][i] = 3 if self.board[1][i] == 0 else 0
+            self.board[6][i] = 1 if self.board[1][i] == 0 else 0
 
     def get_board_state(self, user):
         return {
@@ -233,4 +239,5 @@ Only meant for testing the board
 if __name__ == '__main__':
     c = Checkers(None)
     c.create_board()
-    print(c.board)
+    for i in c.board:
+        print(i)
