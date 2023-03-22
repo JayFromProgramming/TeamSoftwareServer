@@ -200,7 +200,7 @@ class Checkers(BaseRoom):
             for j in range(8):
                 if self.board[i][j] in nums:
                     if self.can_move(i, j) == 2:
-
+                        pass
 
         return moves
 
