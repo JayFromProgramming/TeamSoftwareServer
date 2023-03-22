@@ -132,10 +132,10 @@ class Checkers(BaseRoom):
                 elif j - 1 >= 0 and self.board[tempi][j - 1] == 0:
                     good = 1 if good == 0 else good
 
-                if j + 2 < 8 and tempi + 1 < 8 and self.board[tempi][j + 1] in [3, 4] and self.board[tempi + 1][j + 2]:
+                if j + 2 < 8 and tempi - 1 > -1 and self.board[tempi][j + 1] in [3, 4] and self.board[tempi - 1][j + 2] == 0:
                     good = 2
 
-                if j - 2 >= 0 and tempi + 1 < 8 and self.board[tempi][j - 1] in [3, 4] and self.board[tempi + 1][j - 2]:
+                if j - 2 >= 0 and tempi - 1 > -1 and self.board[tempi][j - 1] in [3, 4] and self.board[tempi - 1][j - 2] == 0:
                     good = 2
             tempi += 2
             if chu == 2 and tempi < 8:
@@ -144,12 +144,36 @@ class Checkers(BaseRoom):
                 if j - 1 >= 0 and self.board[tempi][j - 1] == 0:
                     good = 1 if good == 0 else good
 
-                if j + 2 < 8 and tempi - 1 < 8 and self.board[tempi][j + 1] in [3, 4] and self.board[tempi - 1][j + 2]:
+                if j + 2 < 8 and tempi + 1 < 8 and self.board[tempi][j + 1] in [3, 4] and self.board[tempi + 1][j + 2] == 0:
                     good = 2
 
-                if j - 2 >= 0 and tempi - 1 < 8 and self.board[tempi][j - 1] in [3, 4] and self.board[tempi - 1][j - 2]:
+                if j - 2 >= 0 and tempi + 1 < 8 and self.board[tempi][j - 1] in [3, 4] and self.board[tempi + 1][j - 2] == 0:
+                    good = 2
+        else:
+            tempi = i + 1
+            if tempi < 8:
+                if j + 1 < 8 and self.board[tempi][j + 1] == 0:
+                    good = 1 if good == 0 else good
+                elif j - 1 >= 0 and self.board[tempi][j - 1] == 0:
+                    good = 1 if good == 0 else good
+
+                if j + 2 < 8 and tempi + 1 < 8 and self.board[tempi][j + 1] in [1, 2] and self.board[tempi + 1][j + 2] == 0:
                     good = 2
 
+                if j - 2 >= 0 and tempi + 1 < 8 and self.board[tempi][j - 1] in [1, 2] and self.board[tempi + 1][j - 2] == 0:
+                    good = 2
+            tempi -= 2
+            if chu == 4 and i > -1:
+                if j + 1 < 8 and self.board[tempi][j + 1] == 0:
+                    good = 1 if good == 0 else good
+                if j - 1 >= 0 and self.board[tempi][j - 1] == 0:
+                    good = 1 if good == 0 else good
+
+                if j + 2 < 8 and tempi - 1 > -1 and self.board[tempi][j + 1] in [1, 2] and self.board[tempi - 1][j + 2] == 0:
+                    good = 2
+
+                if j - 2 >= 0 and tempi - 1 > -1 and self.board[tempi][j - 1] in [1, 2] and self.board[tempi - 1][j - 2] == 0:
+                    good = 2
         return good
 
     '''
@@ -176,7 +200,7 @@ class Checkers(BaseRoom):
             for j in range(8):
                 if self.board[i][j] in nums:
                     if self.can_move(i, j) == 2:
-                        pass
+
 
         return moves
 
