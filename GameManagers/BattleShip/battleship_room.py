@@ -150,6 +150,7 @@ class BattleShip(BaseRoom):
         if "BattleShipAI" in globals():
             self.ai_enable = starting_config["ai_enable"] if "ai_enable" in starting_config else True
         else:
+            logging.warning("BattleShip AI could not be imported. AI disabled.")
             self.ai_enable = False
 
         self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
