@@ -146,7 +146,11 @@ class BattleShip(BaseRoom):
         self.spectator_fog_of_war = starting_config[
             "spectator_fog_of_war"] if "spectator_fog_of_war" in starting_config else False
         self.spectator_fog_of_war = False
-        self.ai_enable = starting_config["ai_enable"] if "ai_enable" in starting_config else True
+        # Check if the AI was able to be imported
+        if "BattleShipAI" in globals():
+            self.ai_enable = starting_config["ai_enable"] if "ai_enable" in starting_config else True
+        else:
+            self.ai_enable = False
 
         self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
 
