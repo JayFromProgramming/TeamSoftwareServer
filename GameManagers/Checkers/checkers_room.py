@@ -90,7 +90,7 @@ class Checkers(BaseRoom):
     def check_move(self, user, move):
         move = list(map(int, move.split(' ')))
         f = self.forced_moves(user)
-        if move not in f and f is not None:
+        if (move[0], move[1]) not in f and f is not None:
             return 1
 
         if self.board[move[2]][move[3]] != 0:
@@ -101,7 +101,7 @@ class Checkers(BaseRoom):
             self.toggle_current_player()
             return 0
 
-        mid = (abs(move[0] - move[2]), abs(move[1] - move[3]))
+        mid = ((move[2] + move[0]) / 2, (move[3] + move[1]) / 2)
         midp = self.board[mid[0]][mid[1]]
 
         if midp == 0:
@@ -199,10 +199,10 @@ class Checkers(BaseRoom):
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] in nums:
-                    if self.can_move(i, j) == 2:
-                        pass
+                    if self.can_move(i, j) == 2 and (i, j) not in moves:
+                        moves.append((i, j))
 
-        return moves
+        return moves if moves != [] else None
 
     '''
     Physically making the move on the server board
@@ -228,8 +228,6 @@ class Checkers(BaseRoom):
             return {"error": "forced_move"}
         if res == 2:
             return {"error": "blocked_destination"}
-
-        # self.current_player = self.users[0] if self.current_player != self.users[0] else self.users[1]
 
         self.game_over = True if self.check_win_conditions(user) else self.game_over
 
