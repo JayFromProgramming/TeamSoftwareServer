@@ -6,10 +6,10 @@ class Checkers(BaseRoom):
 
     playable = True
 
-    def __init__(self, database, host=None, name=None, config=None):
-        super().__init__(database, name, host, config)
-        if config is None:
-            config = {}
+    def __init__(self, database, host=None, name=None, starting_config=None, from_save=False, **kwargs):
+        super().__init__(database, name, host, starting_config)
+        if starting_config is None:
+            starting_config = {}
 
         self.state = "Idle"
         self.board = []
