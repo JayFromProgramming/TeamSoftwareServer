@@ -202,7 +202,7 @@ class Checkers(BaseRoom):
                     if self.can_move(i, j) == 2 and (i, j) not in moves:
                         moves.append((i, j))
 
-        return moves if moves != [] else None
+        return None
 
     '''
     Physically making the move on the server board
@@ -254,6 +254,7 @@ class Checkers(BaseRoom):
             self.spectators.append(user)
         else:
             self.users.append(user)
+
 
 '''
 Only meant for testing the board
