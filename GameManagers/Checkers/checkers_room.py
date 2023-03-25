@@ -90,7 +90,7 @@ class Checkers(BaseRoom):
     def check_move(self, user, move):
         move = list(map(int, move.split(' ')))
         f = self.forced_moves(user)
-        if (move[0], move[1]) not in f and f is not None:
+        if f is not None and (move[0], move[1]) not in f:
             return 1
 
         if self.board[move[2]][move[3]] != 0:
