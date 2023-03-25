@@ -61,11 +61,11 @@ class Checkers(BaseRoom):
     def create_board(self):
         self.board = [[0 for i in range(8)] for i in range(8)]
         for i in range(3):
-            for j in range(0, 8, 2):
+            for j in range(1, 8, 2):
                 self.board[i][j] = 3
 
         for i in range(3):
-            for j in range(1, 8, 2):
+            for j in range(0, 8, 2):
                 self.board[7 - i][j] = 1
 
         for i in range(8):
