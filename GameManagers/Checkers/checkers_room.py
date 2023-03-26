@@ -76,7 +76,7 @@ class Checkers(BaseRoom):
         return {
             "your_color": 0 if user == self.users[0] else 1 if user in self.users else None,
             "current_player": 0 if self.current_player == self.users[0] else 1,
-            "board": self.board if user == self.users[0] else self.flip_board(),
+            "board": self.board,
             "last_move": str(self.last_move),
             "game_over": self.game_over,
         }
@@ -262,5 +262,6 @@ Only meant for testing the board
 if __name__ == '__main__':
     c = Checkers(None)
     c.create_board()
-    for i in c.board:
+    l = c.flip_board()
+    for i in l:
         print(i)
