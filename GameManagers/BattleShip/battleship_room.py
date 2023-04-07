@@ -35,7 +35,7 @@ class BattleShip(BaseRoom):
             logging.warning("BattleShip AI could not be imported. AI disabled.")
             self.ai_enable = False
 
-        self.boards = [self.Board(self.board_size, ships), self.Board(self.board_size, ships)]
+        self.boards = [Board(self.board_size, ships), Board(self.board_size, ships)]
 
         self.both_ready = False
         self.current_player = self.users[0] if len(self.users) > 0 else None
