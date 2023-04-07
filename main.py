@@ -231,7 +231,7 @@ class main:
         user = self.room_manager.users.create_user(username)
         response = web.json_response({"user_id": user.hash_id}, status=200)
         response.set_cookie("user_id", str(user.hash_id))
-        logging.info(f"Created user {user.username} with id {user.hash_id}")
+        logging.info(f"Created user {user.username} with id {user.hash_id} from IP {request.remote}")
         return response
 
     @ratelimiter.RateLimit(limit=10, per=datetime.timedelta(seconds=30), bucket_type=ratelimiter.BucketTypes.Endpoint)
@@ -244,7 +244,7 @@ class main:
         user_id = request.match_info.get('user_id')
         user = self.room_manager.users.get_user_by_id(user_id)
         if user is None:
-            print("User not found")
+            logging.info(f"User with id {user_id} not found from IP {request.remote}")
             return web.json_response({"error": "User not found"}, status=404)
         return web.json_response({"username": user.username}, status=200)
 
@@ -257,7 +257,7 @@ class main:
         user_hash = request.match_info.get('user_hash')
         user = self.room_manager.users.get_user(user_hash)
         if user is None:
-            logging.info(f"User with hash {user_hash} not found")
+            logging.info(f"User with hash {user_hash} not found from IP {request.remote}")
             return web.json_response({"error": "User not found"}, status=404)
         logging.info(f"Logging in user {user.username} with id {user.hash_id}")
         response = web.json_response({"username": user.username}, status=200)
