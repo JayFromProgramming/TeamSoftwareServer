@@ -40,7 +40,7 @@ class Checkers(BaseRoom):
     Flips the board in the event that player 2 wants to see the board from their prospective
     """
     def flip_board(self):
-        f = [[0 for i in range(8)] for i in range(8)]
+        f = [[0 for _ in range(8)] for _ in range(8)]
 
         for i in range(8):
             for j in range(8):
