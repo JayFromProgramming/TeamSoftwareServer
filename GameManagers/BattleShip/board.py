@@ -1,9 +1,11 @@
+from ship import Ship
+
 class Board:
 
     def __init__(self, size, ships):
         self.size = size
         self.board = [[0 for _ in range(size)] for _ in range(size)]
-        self.ships = [BattleShip.Ship(x + 1) for x in range(ships)]
+        self.ships = [Ship(x + 1) for x in range(ships)]
 
     def get_ship(self, size):
         for ship in self.ships:
