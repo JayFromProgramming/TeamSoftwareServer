@@ -6,133 +6,15 @@ from GameManagers.base_room import BaseRoom
 from loguru import logger as logging
 
 try:
+    from .board import Board
+    from .ship import Ship
     from .ai import BattleShipAI
 except SyntaxError:
     pass
 
+
 class BattleShip(BaseRoom):
     playable = True
-
-    class Ship:
-
-        def __init__(self, size, x=None, y=None, direction=None):
-            self.size = size
-            self.health = [True for _ in range(size)]
-            self.x = x
-            self.y = y
-            self.direction = direction
-            self.sunk = False
-            self.placed = False
-
-        def is_hit(self, x, y, is_shot):
-            if self.direction == "horizontal":
-                if self.x <= x < self.x + self.size and self.y == y:
-                    if is_shot:
-                        self.health[x - self.x] = False
-                        if not any(self.health):
-                            self.sunk = True
-                    return True
-            else:
-                if self.y <= y < self.y + self.size and self.x == x:
-                    if is_shot:
-                        self.health[y - self.y] = False
-                        if not any(self.health):
-                            self.sunk = True
-                    return True
-            return False
-
-        def encode_friendly(self):
-            return {
-                "size": self.size,
-                "x": self.x,
-                "y": self.y,
-                "direction": self.direction,
-                "sunk": self.sunk,
-                "placed": self.placed
-            }
-
-        def encode_enemy(self):
-            return {
-                "size": self.size,
-                "sunk": self.sunk,
-                "placed": self.placed
-            }
-
-    class Board:
-
-        def __init__(self, size, ships):
-            self.size = size
-            self.board = [[0 for _ in range(size)] for _ in range(size)]
-            self.ships = [BattleShip.Ship(x + 1) for x in range(ships)]
-
-        def get_ship(self, size):
-            for ship in self.ships:
-                if ship.size == size:
-                    return ship
-            return None
-
-        def place_ship(self, ship, x, y, direction):
-            # Check if the ship is in bounds and not overlapping
-            if x > self.size or y > self.size or 0 > x or 0 > y:
-                return False
-
-            if direction == "horizontal":
-                if x + ship.size > self.size:
-                    return False
-            else:
-                if y + ship.size > self.size:
-                    return False
-
-            # Check if the ship is overlapping with another ship
-            for other_ship in self.ships:
-                if other_ship.placed:
-                    # Use the 'is_hit' method to check each coordinate of the this ship
-                    for i in range(ship.size):
-                        if direction == "horizontal":
-                            if other_ship.is_hit(x + i, y, False):
-                                return False
-                        else:
-                            if other_ship.is_hit(x, y + i, False):
-                                return False
-
-            # Place the ship
-            ship.x = x
-            ship.y = y
-            ship.direction = direction
-            ship.placed = True
-            return True
-
-        def is_hit(self, x, y):
-            for ship in self.ships:
-                if ship.is_hit(x, y, True):
-                    self.board[x][y] = 1
-                    return True
-            self.board[x][y] = 2
-            return False
-
-        def encode_friendly(self):
-            return {
-                "board": self.board,
-                "ships": [ship.encode_friendly() for ship in self.ships]
-            }
-
-        def encode_enemy(self):
-            return {
-                "board": self.board,
-                "ships": [ship.encode_enemy() for ship in self.ships]
-            }
-
-        def ready(self):
-            for ship in self.ships:
-                if not ship.placed:
-                    return False
-            return True
-
-        def all_sunk(self):
-            for ship in self.ships:
-                if not ship.sunk:
-                    return False
-            return True
 
     def __init__(self, database, host=None, name=None, starting_config=None, from_save=False, **kwargs):
         super().__init__(database, name, host, starting_config)
