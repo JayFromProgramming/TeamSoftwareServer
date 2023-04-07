@@ -102,7 +102,7 @@ class Checkers(BaseRoom):
             return 0
 
         mid = ((move[2] + move[0]) / 2, (move[3] + move[1]) / 2)
-        midp = self.board[mid[0]][mid[1]]
+        midp = self.board[int(mid[0])][int(mid[1])]
 
         if midp == 0:
             return 3
