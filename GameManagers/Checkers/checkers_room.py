@@ -59,7 +59,7 @@ class Checkers(BaseRoom):
     4 = Black King Piece
     '''
     def create_board(self):
-        self.board = [[0 for i in range(8)] for i in range(8)]
+        self.board = [[0 for _ in range(8)] for _ in range(8)]
         for i in range(3):
             for j in range(1, 8, 2):
                 self.board[i][j] = 3
