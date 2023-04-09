@@ -83,6 +83,7 @@ class BattleShip(BaseRoom):
         "enemy_board": boardObject(fog_of_war),
         "allow_place_ships": True,
         "board_size": 10,
+    }
     """
     def get_board_state(self, user):
         if user in self.users:

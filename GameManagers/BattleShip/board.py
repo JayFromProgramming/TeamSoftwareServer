@@ -54,10 +54,10 @@ class Board:
         return False
 
     """
-    Example encoding:
+    Example encoding of friendly board:
     {
         "board": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                  ... repeated 10 times
+                  ... repeated 8 times
                   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
         "ships": [
             {
@@ -79,7 +79,7 @@ class Board:
         }
 
     """
-    Example encoding:
+    Example encoding of enemy board:
     {
         "board": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                   ... repeated 8 times
