@@ -6,11 +6,11 @@ class Board:
     def __init__(self, size, ships):
         self.size = size
         self.board = [[0 for _ in range(size)] for _ in range(size)]
-        self.ships = [Ship(x + 1) for x in range(ships)]
+        self.ships = [Ship(0, 2), Ship(1, 3), Ship(2, 3), Ship(3, 4), Ship(4, 5)]
 
-    def get_ship(self, size):
+    def get_ship(self, ship_id):
         for ship in self.ships:
-            if ship.size == size:
+            if ship.id == ship_id:
                 return ship
         return None
 

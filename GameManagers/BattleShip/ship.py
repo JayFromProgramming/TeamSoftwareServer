@@ -1,7 +1,8 @@
 class Ship:
 
-    def __init__(self, size, x=None, y=None, direction=None):
+    def __init__(self, id, size, x=None, y=None, direction=None):
         self.size = size
+        self.id = id
         self.health = [True for _ in range(size)]
         self.x = x
         self.y = y
@@ -28,6 +29,7 @@ class Ship:
 
     def encode_friendly(self):
         return {
+            "id": self.id,
             "size": self.size,
             "x": self.x,
             "y": self.y,
@@ -38,6 +40,7 @@ class Ship:
 
     def encode_enemy(self):
         return {
+            "id": self.id,
             "size": self.size,
             "sunk": self.sunk,
             "placed": self.placed

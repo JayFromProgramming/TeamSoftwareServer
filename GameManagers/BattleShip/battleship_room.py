@@ -148,7 +148,7 @@ class BattleShip(BaseRoom):
             if "placed_ships" not in move:
                 return {"error": "No placement data"}
             for ship in move["placed_ships"]:
-                ship_obj = self.boards[self.users.index(user)].get_ship(ship["size"])
+                ship_obj = self.boards[self.users.index(user)].get_ship(ship["id"])
                 if not self.boards[self.users.index(user)].place_ship(ship_obj, ship["x"], ship["y"],
                                                                       ship["direction"]):
                     return {"error": "Invalid ship placement."}
