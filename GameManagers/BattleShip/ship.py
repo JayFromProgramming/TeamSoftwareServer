@@ -1,6 +1,6 @@
 class Ship:
 
-    def __init__(self, id, size, x=None, y=None, direction=None):
+    def __init__(self, id, size, x=None, y=None, direction='horizontal'):
         self.size = size
         self.id = id
         self.health = [True for _ in range(size)]
