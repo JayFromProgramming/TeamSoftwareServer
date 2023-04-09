@@ -53,12 +53,47 @@ class Board:
         self.board[x][y] = 2
         return False
 
+    """
+    Example encoding:
+    {
+        "board": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                  ... repeated 10 times
+                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+        "ships": [
+            {
+                "id": 0,
+                "size": 2,
+                "x": 0,
+                "y": 0,
+                "direction": "horizontal",
+                "sunk": False,
+                "placed": True
+            },...
+        ]
+    }
+    """
     def encode_friendly(self):
         return {
             "board": self.board,
             "ships": [ship.encode_friendly() for ship in self.ships]
         }
 
+    """
+    Example encoding:
+    {
+        "board": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                  ... repeated 8 times
+                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+        "ships": [
+            {
+                "id": 0,
+                "size": 2,
+                "sunk": False,
+                "placed": True
+            },...
+        ]
+    }
+    """
     def encode_enemy(self):
         return {
             "board": self.board,

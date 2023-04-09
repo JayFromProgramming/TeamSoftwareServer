@@ -73,6 +73,17 @@ class BattleShip(BaseRoom):
         info["board_size"] = self.board_size
         return info
 
+    """
+    Example of a board state:
+    {
+        "state": "Awaiting Boards...",
+        "current_player": playerObject,
+        "your_move": True,
+        "board": boardObject(no_fog_of_war),
+        "enemy_board": boardObject(fog_of_war),
+        "allow_place_ships": True,
+        "board_size": 10,
+    """
     def get_board_state(self, user):
         if user in self.users:
             return {
